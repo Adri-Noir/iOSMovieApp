@@ -15,6 +15,7 @@
 		5285DC4A27ED0388005195AC /* InitialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5285DC4927ED0388005195AC /* InitialViewController.swift */; };
 		5285DC4C27ED1D19005195AC /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5285DC4B27ED1D19005195AC /* TestView.swift */; };
 		5285DC4E27EE137B005195AC /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5285DC4D27EE137B005195AC /* TableViewController.swift */; };
+		52D5080627F25E7500DD8E69 /* PeopleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D5080527F25E7500DD8E69 /* PeopleViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		5285DC4927ED0388005195AC /* InitialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialViewController.swift; sourceTree = "<group>"; };
 		5285DC4B27ED1D19005195AC /* TestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestView.swift; sourceTree = "<group>"; };
 		5285DC4D27EE137B005195AC /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
+		52D5080527F25E7500DD8E69 /* PeopleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 				5285DC4B27ED1D19005195AC /* TestView.swift */,
 				5285DC4D27EE137B005195AC /* TableViewController.swift */,
 				524356FB27F0FC370051EB9B /* ExampleViewController.swift */,
+				52D5080527F25E7500DD8E69 /* PeopleViewController.swift */,
 			);
 			path = MovieApp;
 			sourceTree = "<group>";
@@ -144,6 +147,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5285DC4C27ED1D19005195AC /* TestView.swift in Sources */,
+				52D5080627F25E7500DD8E69 /* PeopleViewController.swift in Sources */,
 				5285DC3427EC6D2A005195AC /* AppDelegate.swift in Sources */,
 				5285DC3627EC6D2A005195AC /* SceneDelegate.swift in Sources */,
 				5285DC4E27EE137B005195AC /* TableViewController.swift in Sources */,

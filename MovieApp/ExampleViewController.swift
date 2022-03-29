@@ -15,8 +15,8 @@ class ExampleViewController: UIViewController {
     private let overviewView = UIView()
     
     let fontSizeBig = CGFloat(28)
-    let fontSizeMedium = CGFloat(18)
-    let fontSizeSmall = CGFloat(14)
+    let fontSizeMedium = CGFloat(16)
+    let fontSizeSmall = CGFloat(12)
     let buttonSize = CGFloat(40)
     let bigSpace = CGFloat(30)
     let mediumSpace = CGFloat(20)
@@ -69,8 +69,7 @@ class ExampleViewController: UIViewController {
         textOverImageView.heightAnchor.constraint(equalTo: scrollView.heightAnchor, multiplier: 1/2.25).isActive = true
         
         
-        textOverImageView.backgroundColor = UIColor(patternImage: addImageToView("kv1-copy.png"))
-        textOverImageView.backgroundColor = .white
+        view.backgroundColor = UIColor(patternImage: UIImage(named: "ironman_cover")!)
         // view1.addSubview(UIImageView(image: addImageToView("kv1-copy.png")))
         
         let stackView = UIStackView()
@@ -97,32 +96,32 @@ class ExampleViewController: UIViewController {
         let rating_label = UILabel()
         user_rating_view.addSubview(rating_label)
         rating_label.translatesAutoresizingMaskIntoConstraints = false
-        rating_label.text = "90%"
+        rating_label.text = "76%"
         rating_label.font = UIFont.boldSystemFont(ofSize: fontSizeMedium)
-        rating_label.textColor = .systemGreen
+        rating_label.textColor = .white
         rating_label.topAnchor.constraint(equalTo: user_rating_view.topAnchor).isActive = true
         rating_label.leadingAnchor.constraint(equalTo: user_rating_view.leadingAnchor).isActive = true
-        rating_label.bottomAnchor.constraint(equalTo: user_rating_view.bottomAnchor).isActive = true
+        rating_label.bottomAnchor.constraint(equalTo: user_rating_view.bottomAnchor, constant: -smallSpace).isActive = true
         rating_label.adjustsFontSizeToFitWidth = true
         
         let user_score_label = UILabel()
         user_rating_view.addSubview(user_score_label)
         user_score_label.text = "  User Score"
         user_score_label.font = UIFont.boldSystemFont(ofSize: fontSizeSmall)
-        user_score_label.textColor = .black
+        user_score_label.textColor = .white
         user_score_label.translatesAutoresizingMaskIntoConstraints = false
         user_score_label.leadingAnchor.constraint(equalTo: rating_label.trailingAnchor).isActive = true
         user_score_label.topAnchor.constraint(equalTo: user_rating_view.topAnchor).isActive = true
-        user_score_label.bottomAnchor.constraint(equalTo: user_rating_view.bottomAnchor).isActive = true
+        user_score_label.bottomAnchor.constraint(equalTo: user_rating_view.bottomAnchor, constant: -smallSpace).isActive = true
         // user_score_label.trailingAnchor.constraint(equalTo: user_rating_view.trailingAnchor).isActive = true
         
         
         
         let movie_title_label = UILabel()
         stackView.addArrangedSubview(movie_title_label)
-        movie_title_label.text = "Movie Title"
+        movie_title_label.text = "Iron Man (2008)"
         movie_title_label.font = UIFont.boldSystemFont(ofSize: fontSizeBig)
-        movie_title_label.textColor = .black
+        movie_title_label.textColor = .white
         movie_title_label.translatesAutoresizingMaskIntoConstraints = false
         movie_title_label.adjustsFontSizeToFitWidth = true
         
@@ -132,9 +131,9 @@ class ExampleViewController: UIViewController {
         stackView.addArrangedSubview(release_date_view)
         let movie_release_date_label = UILabel()
         release_date_view.addSubview(movie_release_date_label)
-        movie_release_date_label.text = "Movie Date"
+        movie_release_date_label.text = "05/02/2008 (US)"
         movie_release_date_label.font = UIFont.systemFont(ofSize: fontSizeMedium)
-        movie_release_date_label.textColor = .black
+        movie_release_date_label.textColor = .white
         movie_release_date_label.translatesAutoresizingMaskIntoConstraints = false
         movie_release_date_label.topAnchor.constraint(equalTo: release_date_view.topAnchor, constant: smallSpace).isActive = true
         movie_release_date_label.leadingAnchor.constraint(equalTo: release_date_view.leadingAnchor).isActive = true
@@ -148,9 +147,9 @@ class ExampleViewController: UIViewController {
         
         let movie_tags_label = UILabel()
         movie_tag_and_duration_view.addSubview(movie_tags_label)
-        movie_tags_label.text = "Movie Tags"
+        movie_tags_label.text = "Action, Science Fiction, Adventure"
         movie_tags_label.font = UIFont.systemFont(ofSize: fontSizeMedium)
-        movie_tags_label.textColor = .black
+        movie_tags_label.textColor = .white
         movie_tags_label.translatesAutoresizingMaskIntoConstraints = false
         movie_tags_label.topAnchor.constraint(equalTo: movie_tag_and_duration_view.topAnchor).isActive = true
         movie_tags_label.leadingAnchor.constraint(equalTo: movie_tag_and_duration_view.leadingAnchor).isActive = true
@@ -159,9 +158,9 @@ class ExampleViewController: UIViewController {
         
         let movie_duration_label = UILabel()
         movie_tag_and_duration_view.addSubview(movie_duration_label)
-        movie_duration_label.text = " Movie Duration"
+        movie_duration_label.text = " 2h 6m"
         movie_duration_label.font = UIFont.boldSystemFont(ofSize: fontSizeMedium)
-        movie_duration_label.textColor = .black
+        movie_duration_label.textColor = .white
         movie_duration_label.translatesAutoresizingMaskIntoConstraints = false
         movie_duration_label.topAnchor.constraint(equalTo: movie_tag_and_duration_view.topAnchor).isActive = true
         movie_duration_label.leadingAnchor.constraint(equalTo: movie_tags_label.trailingAnchor).isActive = true
@@ -219,7 +218,7 @@ class ExampleViewController: UIViewController {
         overviewView.translatesAutoresizingMaskIntoConstraints = false
         overviewView.topAnchor.constraint(equalTo: textOverImageView.bottomAnchor).isActive = true
         overviewView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
-        overviewView.heightAnchor.constraint(equalTo: scrollView.heightAnchor, multiplier: 1).isActive = true
+        overviewView.heightAnchor.constraint(equalTo: scrollView.heightAnchor).isActive = true
         overviewView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
         
         overviewView.backgroundColor = .white

@@ -11,14 +11,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let windowScene = scene as? UIWindowScene // 1
+        guard let windowScene = scene as? UIWindowScene
         else { return }
-        window = UIWindow(windowScene: windowScene) // 2
-        // let vc = InitialViewController() // 3
-        let vc = ExampleViewController()
-        window!.rootViewController = vc // 4
+        window = UIWindow(windowScene: windowScene)
+        let view_controller = AppViewController()
+        window!.rootViewController = view_controller
         window?.makeKeyAndVisible() 
     }
 

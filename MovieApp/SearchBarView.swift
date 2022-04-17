@@ -194,8 +194,6 @@ extension SearchBarView : UITextFieldDelegate {
             delegate?.showResults(query: text + string)
         }
         
-        
-    
         return true
     }
     

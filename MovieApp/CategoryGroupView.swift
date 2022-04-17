@@ -42,6 +42,7 @@ class CategoryGroupView : UIView {
         addSubview(title)
         title.text = String(reflecting: group).components(separatedBy: ".").last?.titleCase()
         title.font = UIFont.boldSystemFont(ofSize: 24)
+        title.isUserInteractionEnabled = false
         
         addSubview(scrollView)
         
@@ -74,7 +75,6 @@ class CategoryGroupView : UIView {
             }
             stackView.addArrangedSubview(button)
         }
-        
         
         addSubview(movieCollection)
     }

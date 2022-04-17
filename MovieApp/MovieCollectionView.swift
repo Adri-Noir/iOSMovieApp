@@ -42,15 +42,10 @@ class MovieCollectionView: UIView {
         addSubview(collectionView)
         backgroundColor = .white
         
-        
-                
         collectionView.register(MovieCell.self, forCellWithReuseIdentifier: cellIdentifier)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = .white
-        
-
-        
     }
     
     

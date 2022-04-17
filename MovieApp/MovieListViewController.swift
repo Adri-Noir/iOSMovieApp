@@ -17,6 +17,7 @@ protocol SearchBoxActions: AnyObject {
 }
 
 class MovieListViewController: UIViewController {
+    let searchView = UIView()
     let scrollView = UIScrollView()
     var stackView = UIStackView()
     let mainPageScrollView = UIScrollView()
@@ -25,8 +26,6 @@ class MovieListViewController: UIViewController {
     let movieCollectionPopular = CategoryGroupView(group: .popular)
     let movieCollectionFreeToWatch = CategoryGroupView(group: .freeToWatch)
     let movieCollectionTending = CategoryGroupView(group: .trending)
-    
-    
     let padding = 20
     lazy var searchBar: SearchBarView = {
         let searchBarView = SearchBarView()
@@ -35,14 +34,21 @@ class MovieListViewController: UIViewController {
     }()
     
     override func viewDidLoad() {
-        view.addSubview(searchBar)
+        view.addSubview(searchView)
+        searchView.addSubview(searchBar)
         view.backgroundColor = .white
+        searchView.backgroundColor = .white
         
-        searchBar.snp.makeConstraints { (make) in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(padding + 5)
+        searchView.snp.makeConstraints { (make) in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(padding - 5)
             make.leading.equalToSuperview().offset(padding);
             make.trailing.equalToSuperview().inset(padding)
-            make.height.equalTo(50)
+            make.height.equalTo(60)
+        }
+        
+        searchBar.snp.makeConstraints{ (make) in
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().inset(10)
         }
         addResultsViews()
         setResultsLayout()
@@ -62,7 +68,7 @@ class MovieListViewController: UIViewController {
     
     func setResultsLayout() {
         scrollView.snp.makeConstraints{ (make) in
-            make.top.equalTo(searchBar.snp.bottom).offset(padding)
+            make.top.equalTo(searchView.snp.bottom).offset(padding)
             make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
             make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
             make.bottom.equalToSuperview()
@@ -100,7 +106,7 @@ class MovieListViewController: UIViewController {
     func setMainLayout() {
         mainPageScrollView.snp.makeConstraints{ (make) in
             make.bottom.equalToSuperview()
-            make.top.equalTo(searchBar.snp.bottom)
+            make.top.equalTo(searchView.snp.bottom)
             make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
             make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
         }
@@ -115,7 +121,6 @@ class MovieListViewController: UIViewController {
             make.width.equalToSuperview()
         } })
         
-    
     }
     
     func showMainView() {

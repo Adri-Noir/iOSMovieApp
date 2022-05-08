@@ -18,8 +18,18 @@ class MovieCollectionView: UIView {
         
         return UICollectionView(frame: CGRect.zero, collectionViewLayout: flowlayout)
     }()
+    weak var movieDelegate: CollectionViewActions?
+    
+    let apiKey = "<api-key>"
     
     var moviesList : [MovieModel] = []
+    
+    var movies : [CategoryMovieModel] = []
+    var filteredMovies : [CategoryMovieModel] = []
+    var lastFilter : Int = 0
+    var alreadyGotData = false
+    var movieGroup : MovieGroup = .trending
+    let pages = 3
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -27,8 +37,8 @@ class MovieCollectionView: UIView {
 
     convenience init(group : MovieGroup) {
         self.init(frame: CGRect.zero)
+        self.movieGroup = group
 
-        populateMovieData(group: group)
         buildView()
         setLayout()
     }
@@ -55,13 +65,57 @@ class MovieCollectionView: UIView {
             make.top.leading.trailing.bottom.equalToSuperview()
         }
         collectionView.collectionViewLayout.invalidateLayout()
+        
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
     }
 
-    func populateMovieData(group : MovieGroup) {
-        for movie in Movies.all() {
-            if (movie.group.contains(group)) {
-                moviesList.append(movie)
+    func populateMovieData() {
+        switch(movieGroup) {
+        case .topRated:
+            for i in 1...pages {
+                getDataFromURL(requestUrl: "https://api.themoviedb.org/3/movie/top_rated?language=en-US&page="+String(i)+"&api_key="+apiKey)
             }
+        case .popular:
+            for i in 1...pages {
+                getDataFromURL(requestUrl: "https://api.themoviedb.org/3/movie/popular?language=en-US&page="+String(i)+"&api_key="+apiKey)
+            }
+        default:
+            return
+        }
+    }
+    
+    func filterMovies(filter: Int) {
+        if lastFilter == filter {
+            return
+        }
+        
+        lastFilter = filter
+        filteredMovies = []
+
+        switch(filter) {
+        case -1:
+            movies = []
+            for i in 1...pages {
+                getDataFromURL(requestUrl: "https://api.themoviedb.org/3/trending/movie/day?api_key="+apiKey+"&page="+String(i))
+            }
+        case -2:
+            movies = []
+            for i in 1...pages {
+                getDataFromURL(requestUrl: "https://api.themoviedb.org/3/trending/movie/week?api_key="+apiKey+"&page="+String(i))
+            }
+        default:
+            if !alreadyGotData {
+                populateMovieData()
+                alreadyGotData = true
+            } else {
+                for movie in movies {
+                    if movie.genreIds.contains(filter) {
+                        filteredMovies.append(movie)
+                    }
+                }
+                collectionView.reloadData()
+            }
+            
             
         }
     }
@@ -73,7 +127,7 @@ extension MovieCollectionView: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return moviesList.count
+        return filteredMovies.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -81,7 +135,7 @@ extension MovieCollectionView: UICollectionViewDataSource {
             withReuseIdentifier: cellIdentifier,
             for: indexPath) as! MovieCell
         
-        let movie = moviesList[indexPath.row]
+        let movie = filteredMovies[indexPath.row]
         cell.setup(movie: movie)
         
         return cell
@@ -95,3 +149,49 @@ extension MovieCollectionView: UICollectionViewDelegateFlowLayout {
     }
 }
 
+
+extension MovieCollectionView: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        movieDelegate?.movieClicked(movie: filteredMovies[indexPath.row])
+    }
+}
+
+
+extension MovieCollectionView : NetworkServiceProtocol {
+    func getDataFromURL(requestUrl: String) {
+        guard let url = URL(string: requestUrl) else { return  }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let networkService = NetworkService()
+        networkService.executeUrlRequest(request) { dataValue, error in
+            if error != nil {
+                return
+            }
+            guard let value = dataValue else {
+                return
+            }
+            
+            
+            guard let value = try? JSONDecoder().decode(CategoryModel.self, from: value) else {
+                return
+            }
+            
+            for movie in value.results {
+                self.movies.append(movie)
+            }
+            if self.lastFilter != -1 && self.lastFilter != -2 {
+                for movie in self.movies {
+                    if movie.genreIds.contains(self.lastFilter) {
+                        self.filteredMovies.append(movie)
+                    }
+                }
+            } else {
+                self.filteredMovies = self.movies
+            }
+            
+            
+            self.collectionView.reloadData()
+        }
+    }
+}

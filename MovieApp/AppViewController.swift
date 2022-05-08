@@ -1,12 +1,29 @@
 import Foundation
 import UIKit
 
+protocol appViewCastCollectionCommunication : AnyObject {
+    func castDataLoaded()
+}
+
 
 class AppViewController: UIViewController {
     private let scrollView = UIScrollView()
     private let textOverImageView = UIView()
     private let overviewView = UIView()
     private let mainView = UIView()
+    
+    private let rating_label = UILabel()
+    private let movie_title_label = UITextView()
+    private let movie_release_date_label = UILabel()
+    private let movie_tags_label = UILabel()
+    private let movie_duration_label = UILabel()
+    private let overview_text = UITextView()
+    private let imageView = UIImageView()
+    private lazy var castCollectionView : CastCollectionView = {
+        let castCollectionView = CastCollectionView()
+        castCollectionView.appViewCollectionViewCommunicationDelegate = self
+        return castCollectionView
+    }()
     
     private let fontSizeBig = CGFloat(28)
     private let fontSizeMedium = CGFloat(16)
@@ -17,49 +34,112 @@ class AppViewController: UIViewController {
     private let smallSpace = CGFloat(10)
     private let extraSmallSpace = CGFloat(5)
     private let padding = CGFloat(20)
+    private var movie : CategoryMovieModel?
+    
+    private let apiKey = "<api-key>"
+    
+    
+    init(movie : CategoryMovieModel) {
+        self.movie = movie
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        self.movie = nil
+        super.init(coder: aDecoder)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        addBackgroundImage()
+        
+        buildNavBar()
+        
+        if movie == nil {
+            buildErrorView()
+            return
+        }
+
+        getDataFromURL(requestUrl: "https://api.themoviedb.org/3/movie/"+String(movie!.id)+"?language=en-US&page=1&api_key="+apiKey)
         buildViews()
-        updateContentSizeScrollView()
     }
     
+    
+    private func buildErrorView() {
+        let errorView = UIView()
+        errorView.backgroundColor = UIColor(red: 0.91, green: 0.93, blue: 0.96, alpha: 1.00)
+        view.addSubview(errorView)
+        errorView.snp.makeConstraints{ (make) in
+            make.top.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        
+        let errorTextView = UITextView()
+        errorTextView.backgroundColor = UIColor(red: 0.91, green: 0.93, blue: 0.96, alpha: 1.00)
+        errorTextView.text = "Network error: something went wrong :("
+        errorTextView.font = UIFont.systemFont(ofSize: 18)
+        errorView.addSubview(errorTextView)
+        
+        errorTextView.snp.makeConstraints{ (make) in
+            make.centerY.centerX.equalToSuperview()
+            make.width.equalTo(300)
+            make.height.equalTo(200)
+        }
+    }
+    
+    
+    private func buildNavBar() {
+        let navigationBarAppearance = UINavigationBarAppearance()
+        navigationBarAppearance.configureWithDefaultBackground()
+        navigationBarAppearance.backgroundColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 1.00)
+
+        navigationItem.scrollEdgeAppearance = navigationBarAppearance
+        navigationItem.standardAppearance = navigationBarAppearance
+        navigationItem.compactAppearance = navigationBarAppearance
+    }
+    
+    
     private func buildViews() {
-        scrollView.addSubview(mainView)
         view.addSubview(scrollView)
         view.backgroundColor = .white
-        scrollView.bounces = false
-        
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor).isActive = true
-        scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor).isActive = true
-        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        
-        
-        
-        mainView.translatesAutoresizingMaskIntoConstraints = false
-        mainView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
-        mainView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
-        mainView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
 
+        
+        scrollView.snp.makeConstraints { (make) in
+            make.top.bottom.equalToSuperview()
+            make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
+            make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
+        }
+    
         
         createImageView()
         
         createCollectionView()
+        
+        let navBar = UINavigationBarAppearance()
+        navBar.backgroundColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 1.00)
+        
+        self.navigationController?.navigationBar.scrollEdgeAppearance = navBar
+        
+        
+        let titleView = UIView()
+        let imageView = UIImageView(image: UIImage(named: "1a40d6f4d2d74d6370baae3e2adcfe1d"))
+        imageView.contentMode = .scaleAspectFit
+        titleView.addSubview(imageView)
+        imageView.snp.makeConstraints { (make) in
+            make.centerX.centerY.equalToSuperview()
+            make.height.equalTo(40)
+        }
+        
+        navigationItem.titleView = titleView
     }
     
     
     private func createImageView() {
-        mainView.addSubview(textOverImageView)
+        scrollView.addSubview(textOverImageView)
         
-        
-        textOverImageView.translatesAutoresizingMaskIntoConstraints = false
-        textOverImageView.topAnchor.constraint(equalTo: mainView.topAnchor).isActive = true
-        textOverImageView.leadingAnchor.constraint(equalTo: mainView.leadingAnchor).isActive = true
-        textOverImageView.widthAnchor.constraint(equalTo: mainView.widthAnchor).isActive = true
-        textOverImageView.heightAnchor.constraint(equalTo: mainView.heightAnchor, multiplier: 1/2.05).isActive = true
+        textOverImageView.snp.makeConstraints{ (make) in
+            make.top.leading.width.equalToSuperview()
+            make.height.equalToSuperview().multipliedBy(0.75)
+        }
         
 //        POKUSAJ GRADIENTA (NIJE RESPONZIVAN)
 //        let gradientLayer = CAGradientLayer()
@@ -69,6 +149,10 @@ class AppViewController: UIViewController {
 //            self.textOverImageView.layer.addSublayer(gradientLayer)
 //        }
         
+        textOverImageView.addSubview(imageView)
+        imageView.snp.makeConstraints{ (make) in
+            make.top.leading.trailing.bottom.equalToSuperview()
+        }
         
         
         let stackView = UIStackView()
@@ -93,10 +177,9 @@ class AppViewController: UIViewController {
         let user_rating_view = UIView()
         stackView.addArrangedSubview(user_rating_view)
         
-        let rating_label = UILabel()
+        
         user_rating_view.addSubview(rating_label)
         rating_label.translatesAutoresizingMaskIntoConstraints = false
-        rating_label.text = "76%"
         rating_label.font = UIFont.boldSystemFont(ofSize: fontSizeMedium + 4)
         rating_label.textColor = .white
         rating_label.topAnchor.constraint(equalTo: user_rating_view.topAnchor).isActive = true
@@ -117,20 +200,20 @@ class AppViewController: UIViewController {
         
         
         
-        let movie_title_label = UILabel()
+        
         stackView.addArrangedSubview(movie_title_label)
-        movie_title_label.text = "Iron Man (2008)"
         movie_title_label.font = UIFont.boldSystemFont(ofSize: fontSizeBig)
         movie_title_label.textColor = .white
-        movie_title_label.translatesAutoresizingMaskIntoConstraints = false
+        movie_title_label.isScrollEnabled = false
+        movie_title_label.isEditable = false
+        movie_title_label.backgroundColor = .clear
         
         
         
         let release_date_view = UIView()
         stackView.addArrangedSubview(release_date_view)
-        let movie_release_date_label = UILabel()
+        
         release_date_view.addSubview(movie_release_date_label)
-        movie_release_date_label.text = "05/02/2008 (US)"
         movie_release_date_label.font = UIFont.systemFont(ofSize: fontSizeMedium)
         movie_release_date_label.textColor = .white
         movie_release_date_label.translatesAutoresizingMaskIntoConstraints = false
@@ -143,9 +226,9 @@ class AppViewController: UIViewController {
         let movie_tag_and_duration_view = UIView()
         stackView.addArrangedSubview(movie_tag_and_duration_view)
         
-        let movie_tags_label = UILabel()
+        
         movie_tag_and_duration_view.addSubview(movie_tags_label)
-        movie_tags_label.text = "Action, Science Fiction, Adventure"
+        
         movie_tags_label.font = UIFont.systemFont(ofSize: fontSizeMedium)
         movie_tags_label.textColor = .white
         movie_tags_label.translatesAutoresizingMaskIntoConstraints = false
@@ -154,9 +237,9 @@ class AppViewController: UIViewController {
         movie_tags_label.bottomAnchor.constraint(equalTo: movie_tag_and_duration_view.bottomAnchor).isActive = true
         movie_tags_label.adjustsFontSizeToFitWidth = true
         
-        let movie_duration_label = UILabel()
+        
         movie_tag_and_duration_view.addSubview(movie_duration_label)
-        movie_duration_label.text = "2h 6m"
+        
         movie_duration_label.font = UIFont.boldSystemFont(ofSize: fontSizeMedium)
         movie_duration_label.textColor = .white
         movie_duration_label.translatesAutoresizingMaskIntoConstraints = false
@@ -193,15 +276,14 @@ class AppViewController: UIViewController {
     
     
     private func createCollectionView() {
-        mainView.addSubview(overviewView)
+        scrollView.addSubview(overviewView)
         overviewView.backgroundColor = .white
         
-        overviewView.translatesAutoresizingMaskIntoConstraints = false
-        overviewView.topAnchor.constraint(equalTo: textOverImageView.bottomAnchor).isActive = true
-        overviewView.leadingAnchor.constraint(equalTo: mainView.leadingAnchor).isActive = true
-        overviewView.bottomAnchor.constraint(equalTo: mainView.bottomAnchor).isActive = true
-        overviewView.widthAnchor.constraint(equalTo: mainView.widthAnchor).isActive = true
-        
+        overviewView.snp.makeConstraints{ (make) in
+            make.leading.bottom.equalToSuperview()
+            make.top.equalTo(textOverImageView.snp.bottom)
+            make.width.equalToSuperview()
+        }
         
 
         let overview_label = UILabel()
@@ -209,125 +291,100 @@ class AppViewController: UIViewController {
         overview_label.text = "Overview"
         overview_label.font = UIFont.boldSystemFont(ofSize: fontSizeBig)
         overview_label.textColor = .black
-        overview_label.translatesAutoresizingMaskIntoConstraints = false
-        overview_label.topAnchor.constraint(equalTo: overviewView.topAnchor, constant: bigSpace).isActive = true
-        overview_label.leadingAnchor.constraint(equalTo: overviewView.leadingAnchor, constant: padding).isActive = true
+        overview_label.snp.makeConstraints{ (make) in
+            make.top.equalToSuperview().offset(bigSpace)
+            make.leading.equalToSuperview().offset(padding)
+        }
         
         
-        
-        let overview_text = UITextView()
         overviewView.addSubview(overview_text)
-        overview_text.text = "After being held captive in an Afghan cave, billionaire engineer Tony Stark creates a unique weaponized suit of armor to fight evil."
+        
         overview_text.font = UIFont.systemFont(ofSize: fontSizeMedium)
         overview_text.textColor = .black
         overview_text.isEditable = false
         overview_text.isSelectable = false
-        overview_text.translatesAutoresizingMaskIntoConstraints = false
-        overview_text.topAnchor.constraint(equalTo: overview_label.bottomAnchor, constant: padding).isActive = true
-        overview_text.leadingAnchor.constraint(equalTo: overview_label.leadingAnchor).isActive = true
-        overview_text.trailingAnchor.constraint(equalTo: overviewView.trailingAnchor, constant: -padding).isActive = true
+        overview_text.snp.makeConstraints{ (make) in
+            make.top.equalTo(overview_label.snp.bottom).offset(padding)
+            make.leading.equalToSuperview().offset(padding)
+            make.trailing.equalToSuperview().inset(padding)
+        }
         overview_text.isScrollEnabled = false
         
         
         
-        let stackViewUpper = UIStackView()
-        stackViewUpper.backgroundColor = .white
-        overviewView.addSubview(stackViewUpper)
-        stackViewUpper.axis = .horizontal
-        stackViewUpper.alignment = .center
-        stackViewUpper.distribution = .fillEqually
-        stackViewUpper.translatesAutoresizingMaskIntoConstraints = false
+        overviewView.addSubview(castCollectionView)
         
-        stackViewUpper.topAnchor.constraint(equalTo: overview_text.bottomAnchor, constant: bigSpace).isActive = true
-        stackViewUpper.leadingAnchor.constraint(equalTo: overview_label.leadingAnchor).isActive = true
-        stackViewUpper.trailingAnchor.constraint(equalTo: overviewView.trailingAnchor, constant: -padding).isActive = true
+        castCollectionView.snp.makeConstraints{ (make) in
+            make.top.equalTo(overview_text.snp.bottom).offset(self.bigSpace)
+            make.leading.equalToSuperview().offset(self.padding)
+            make.trailing.equalToSuperview().inset(self.padding)
+            make.bottom.equalToSuperview()
+        }
         
         
         
-        let person1 = createCastView(name: "Don Heck", job: "Characters")
-        stackViewUpper.addArrangedSubview(person1)
         
-        let person2 = createCastView(name: "Jack Kirby", job: "Characters")
-        stackViewUpper.addArrangedSubview(person2)
-
-        let person3 = createCastView(name: "John Favreau", job: "Director")
-        stackViewUpper.addArrangedSubview(person3)
-        
-        
-        
-        let stackViewLower = UIStackView()
-        stackViewLower.backgroundColor = .white
-        overviewView.addSubview(stackViewLower)
-        stackViewLower.axis = .horizontal
-        stackViewLower.alignment = .center
-        stackViewLower.distribution = .fillEqually
-        stackViewLower.translatesAutoresizingMaskIntoConstraints = false
-        
-        stackViewLower.topAnchor.constraint(equalTo: stackViewUpper.bottomAnchor, constant: bigSpace).isActive = true
-        stackViewLower.leadingAnchor.constraint(equalTo: overview_label.leadingAnchor).isActive = true
-        stackViewLower.trailingAnchor.constraint(equalTo: overviewView.trailingAnchor, constant: -padding).isActive = true
-        stackViewLower.bottomAnchor.constraint(equalTo: overviewView.bottomAnchor).isActive = true
-        
-        
-        
-        let person4 = createCastView(name: "Don Heck", job: "Screenplay")
-        stackViewLower.addArrangedSubview(person4)
-
-        let person5 = createCastView(name: "Jack Marcum", job: "Screenplay")
-        stackViewLower.addArrangedSubview(person5)
-
-        let person6 = createCastView(name: "Matt Holloway", job: "Screenplay")
-        stackViewLower.addArrangedSubview(person6)
     }
-    
-    
-    private func createCastView(name: String, job : String) -> UIView {
-        let view1 = UIView()
-        
-        let person_tag = UITextView()
-        view1.addSubview(person_tag)
-        person_tag.text = name
-        person_tag.isEditable = false
-        person_tag.isScrollEnabled = false
-        person_tag.font = UIFont.boldSystemFont(ofSize: fontSizeMedium - 1)
-        person_tag.textColor = .black
-        
-        person_tag.translatesAutoresizingMaskIntoConstraints = false
-        person_tag.topAnchor.constraint(equalTo: view1.topAnchor).isActive = true
-        person_tag.leadingAnchor.constraint(equalTo: view1.leadingAnchor).isActive = true
-        person_tag.trailingAnchor.constraint(equalTo: view1.trailingAnchor).isActive = true
-        
-        
-        
-        let job_tag = UITextView()
-        view1.addSubview(job_tag)
-        job_tag.text = job
-        job_tag.textColor = .black
-        job_tag.isEditable = false
-        job_tag.isScrollEnabled = false
-        job_tag.font = UIFont.systemFont(ofSize: fontSizeMedium - 1)
-        
-        job_tag.translatesAutoresizingMaskIntoConstraints = false
-        job_tag.topAnchor.constraint(equalTo: person_tag.bottomAnchor).isActive = true
-        job_tag.leadingAnchor.constraint(equalTo: view1.leadingAnchor).isActive = true
-        job_tag.trailingAnchor.constraint(equalTo: view1.trailingAnchor).isActive = true
-        job_tag.bottomAnchor.constraint(equalTo: view1.bottomAnchor).isActive = true
-        
-        return view1
-    }
-    
-    
-    private func updateContentSizeScrollView() {
-        DispatchQueue.main.async {
-            self.scrollView.contentSize.height = self.mainView.frame.size.height
+}
+
+
+extension AppViewController : NetworkServiceProtocol {
+    func getDataFromURL(requestUrl: String) {
+        guard let url = URL(string: requestUrl) else { return  }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let networkService = NetworkService()
+        networkService.executeUrlRequest(request) { dataValue, error in
+            if error != nil {
+                self.buildErrorView()
+                return
+            }
+            guard let value = dataValue else {
+                return
+            }
+            
+            guard let value = try? JSONDecoder().decode(TMDBMovieModel.self, from: value) else {
+                self.buildErrorView()
+                return
+            }
+            
+            let url = URL(string: "https://image.tmdb.org/t/p/original"+value.posterPath)
+            DispatchQueue.global().async {
+                if let data = try? Data(contentsOf: url!) {
+                    DispatchQueue.main.async {
+                        self.imageView.image = UIImage(data: data)!
+                    }
+                }
+            }
+            
+            self.rating_label.text = String(Int(value.voteAverage*10))+"%"
+            self.movie_title_label.text = value.title
+            self.movie_release_date_label.text = value.releaseDate
+            var movieTags = ""
+            var counter = 0
+            for genre in value.genres {
+                if counter > 3 {
+                    break
+                }
+                movieTags += genre.name + "  "
+                counter += 1
+            }
+            self.movie_tags_label.text = movieTags
+            self.movie_duration_label.text = String(value.runtime) + " m"
+            self.overview_text.text = value.overview
+            self.castCollectionView.getDataFromURL(requestUrl: "https://api.themoviedb.org/3/movie/"+String(value.id)+"/credits?api_key="+self.apiKey)
         }
     }
-    
-    
-    private func addBackgroundImage() {
-        let image = UIImage(named: "ironman_cover")
-        textOverImageView.backgroundColor = UIColor(patternImage: image!)
-        
-    }
+}
 
+
+extension AppViewController : appViewCastCollectionCommunication {
+    func castDataLoaded() {
+        DispatchQueue.main.async {   // Hacky solution, please inform me if there is a better solution
+            self.castCollectionView.snp.makeConstraints{ (make) in
+                    make.height.equalTo(self.castCollectionView.collectionView.contentSize.height)
+            }
+        }
+    }
 }

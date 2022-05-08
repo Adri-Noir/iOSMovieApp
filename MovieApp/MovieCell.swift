@@ -54,12 +54,27 @@ class MovieCell: UICollectionViewCell {
         }
     }
     
-    func setup(movie : MovieModel) {
-        let url = URL(string: movie.imageUrl)
-        let data = try? Data(contentsOf: url!)
-        movieImage.image = UIImage(data: data!)
+    func setup(movie : CategoryMovieModel) {
+        var poster = ""
+        if movie.posterPath == nil {
+            if movie.backdropPath != nil {
+                poster = movie.backdropPath!
+            }
+        } else {
+            poster = movie.posterPath!
+        }
+
+        let url = URL(string: "https://image.tmdb.org/t/p/w500"+poster)
+
+        DispatchQueue.global().async {
+            if let data = try? Data(contentsOf: url!) {
+                DispatchQueue.main.async {
+                    self.movieImage.image = UIImage(data: data)
+                }
+            }
+        }
         
-        likeButton.isSelected = movie.favorite
+        likeButton.isSelected = false
     }
 }
 

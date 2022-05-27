@@ -1,62 +1,84 @@
 //
-//  CastView.swift
+//  CastCollectionView.swift
 //  MovieApp
 //
 //  Created by Five on 06.05.2022..
 //
 
 import Foundation
+import SnapKit
 import UIKit
+import MovieAppData
 
-
-class CastView: UICollectionViewCell {
+class CastView: UIView {
     let stackView = UIStackView()
-    let personTag = UITextView()
-    let jobTag = UITextView()
-    let fontSize = CGFloat(15)
+    let row1StackView = UIStackView()
+    let row2StackView = UIStackView()
     
     override init(frame: CGRect) {
-        super.init(frame: .zero)
+        super.init(frame: frame)
+    }
+
+    convenience init() {
+        self.init(frame: CGRect.zero)
         buildView()
         setLayout()
     }
-    
+
     required init(coder aDecoder: NSCoder) {
         fatalError("This class does not support NSCoding")
     }
     
+    
     func buildView() {
+        backgroundColor = .white
+        
         stackView.axis = .vertical
-        stackView.alignment = .leading
-        stackView.distribution = .fill
-        
-        jobTag.textColor = .black
-        jobTag.isEditable = false
-        jobTag.isScrollEnabled = false
-        jobTag.font = UIFont.systemFont(ofSize: fontSize)
-        
-        personTag.isEditable = false
-        personTag.isScrollEnabled = false
-        personTag.font = UIFont.boldSystemFont(ofSize: fontSize)
-        personTag.textColor = .black
-        
-        let emptyView = UIView()
-        
+        stackView.spacing = 30
         addSubview(stackView)
-        stackView.addArrangedSubview(personTag)
-        stackView.addArrangedSubview(jobTag)
-        stackView.addArrangedSubview(emptyView)
+        
+        stackView.addArrangedSubview(row1StackView)
+        row1StackView.axis = .horizontal
+        row1StackView.distribution = .fillEqually
+        row1StackView.alignment = .leading
+        
+        stackView.addArrangedSubview(row2StackView)
+        row2StackView.axis = .horizontal
+        row2StackView.distribution = .fillEqually
+        row2StackView.alignment = .leading
     }
     
+    
     func setLayout() {
-        stackView.snp.makeConstraints{ (make) in
-            make.top.leading.trailing.bottom.equalToSuperview()
+        stackView.snp.makeConstraints {make in
+            make.top.bottom.leading.trailing.equalToSuperview()
         }
     }
     
     
-    func setup(name: String, job: String) {
-        personTag.text = name
-        jobTag.text = job
+    func fetchMovieCast(movieId id: Int) {
+        NetworkService.fetchMovieCast(movieId: id) {data in
+            guard let castData = data else {
+                return
+            }
+            
+            for (index, crew) in castData.crew.enumerated() {
+                if (index >= 6) {
+                    break
+                }
+                
+                let castCell = CastCell()
+                castCell.setup(crew: crew)
+                
+                if (index < 3) {
+                    self.row1StackView.addArrangedSubview(castCell)
+                } else {
+                    self.row2StackView.addArrangedSubview(castCell)
+                }
+                
+            }
+        }
     }
+
 }
+

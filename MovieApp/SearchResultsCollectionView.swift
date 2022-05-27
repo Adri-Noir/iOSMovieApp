@@ -20,9 +20,9 @@ class SearchResultsCollectionView: UIView {
         return UICollectionView(frame: CGRect.zero, collectionViewLayout: flowlayout)
     }()
     weak var movieDelegate: MovieCollectionViewActions?
-    var moviesList : [CategoryMovieModel] = []
-    let apiKey = "<api-key>"
-    var searchResults : [CategoryMovieModel] = []
+    var moviesList : [TMDBCategoryMovieModel] = []
+    let apiKey = Constants.apiKey
+    var searchResults : [TMDBCategoryMovieModel] = []
     
     
     override init(frame: CGRect) {
@@ -65,7 +65,18 @@ class SearchResultsCollectionView: UIView {
     
     func search(query: String) {
         searchResults = []
-        getDataFromURL(requestUrl: "https://api.themoviedb.org/3/search/movie?api_key="+apiKey+"&query="+query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!+"&page=1&include_adult=false")
+        NetworkService.fetchSearchResults(searchQuery: query) {data in
+            guard let searchData = data else {
+                self.collectionView.reloadData()
+                return
+            }
+            
+            for movie in searchData.results {
+                self.searchResults.append(movie)
+            }
+            
+            self.collectionView.reloadData()
+        }
         
     }
 }
@@ -97,8 +108,6 @@ extension SearchResultsCollectionView: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: frame.size.width, height: 209)
     }
-    
-    
 }
 
 
@@ -108,34 +117,3 @@ extension SearchResultsCollectionView: UICollectionViewDelegate {
     }
 }
 
-
-extension SearchResultsCollectionView: NetworkServiceProtocol {
-    func getDataFromURL(requestUrl: String) {
-        guard let url = URL(string: requestUrl) else { return  }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let networkService = NetworkService()
-        networkService.executeUrlRequest(request) { dataValue, error in
-            if error != nil {
-                self.collectionView.reloadData()
-                return
-            }
-            guard let value = dataValue else {
-                self.collectionView.reloadData()
-                return
-            }
-            
-            guard let value = try? JSONDecoder().decode(CategoryModel.self, from: value) else {
-                self.collectionView.reloadData()
-                return
-            }
-            
-            for movie in value.results {
-                self.searchResults.append(movie)
-            }
-            
-            self.collectionView.reloadData()
-        }
-    }
-}

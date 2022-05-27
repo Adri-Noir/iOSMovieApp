@@ -20,7 +20,7 @@ protocol SearchBoxActions: AnyObject {
 
 
 protocol MovieCollectionViewActions: AnyObject {
-    func userClickedMovie(movie: CategoryMovieModel)
+    func userClickedMovie(movie: TMDBCategoryMovieModel)
 }
 
 
@@ -63,7 +63,7 @@ class MovieListViewController: UIViewController {
         searchBarView.delegate = self
         return searchBarView
     }()
-    var searchBackup : [CategoryMovieModel] = []
+    var searchBackup : [TMDBCategoryMovieModel] = []
     
     
     override func viewDidLoad() {
@@ -86,9 +86,7 @@ class MovieListViewController: UIViewController {
         }
         
         
-        addResultsViews()
-        setResultsLayout()
-        removeResultsView()
+        setupResultsView()
         loadMainPage()
         setMainLayout()
         
@@ -111,8 +109,15 @@ class MovieListViewController: UIViewController {
         }
         
         navigationItem.titleView = titleView
-        
     }
+    
+    
+    func setupResultsView() {
+        addResultsViews()
+        setResultsLayout()
+        hideResultsView()
+    }
+    
     
     func loadSearchResults(query: String) {
         searchResultsCollectionView.search(query: query)
@@ -173,12 +178,12 @@ class MovieListViewController: UIViewController {
     }
     
     
-    func removeMainView() {
+    func hideMainView() {
         mainPageScrollView.isHidden = true
         
     }
     
-    func removeResultsView() {
+    func hideResultsView() {
         searchResultsCollectionView.isHidden = true
 
     }
@@ -191,7 +196,7 @@ class MovieListViewController: UIViewController {
     func showResults(query: String) {
         if !resultsViewSetup {
             resultsViewSetup = true
-            removeMainView()
+            hideMainView()
             showResultView()
         } else {
             stackView.subviews.forEach({ $0.removeFromSuperview() })
@@ -218,7 +223,7 @@ class MovieListViewController: UIViewController {
 
 extension MovieListViewController: SearchBoxActions {
     func userPressedCancel() {
-        removeResultsView()
+        hideResultsView()
         showMainView()
         resultsViewSetup = false
 
@@ -236,9 +241,9 @@ extension MovieListViewController: SearchBoxActions {
 
 
 extension MovieListViewController: MovieCollectionViewActions {
-    func userClickedMovie(movie: CategoryMovieModel) {
+    func userClickedMovie(movie: TMDBCategoryMovieModel) {
         searchBackup = searchResultsCollectionView.searchResults
-        let appViewController = AppViewController(movie: movie)
+        let appViewController = MovieDetailsViewController(movie: movie)
         self.navigationController?.pushViewController(appViewController, animated: true)
     }
 }

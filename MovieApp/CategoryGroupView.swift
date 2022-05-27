@@ -11,7 +11,7 @@ import MovieAppData
 
 
 protocol CollectionViewActions: AnyObject {
-    func movieClicked(movie: CategoryMovieModel)
+    func movieClicked(movie: TMDBCategoryMovieModel)
 }
 
 
@@ -27,7 +27,7 @@ class CategoryGroupView : UIView {
         border.backgroundColor = .black
         return border
     }()
-    let apiKey = "<api-key>"
+
     var currentBoldButton = UIButton()
     weak var movieDelegate: MovieCollectionViewActions?
     
@@ -67,17 +67,18 @@ class CategoryGroupView : UIView {
         case .trending:
             createFilters(filterList: [FilterInfo(name: "Day", id: -1), FilterInfo(name: "Week", id: -2)])
         default:
-            getDataFromURL(requestUrl: "https://api.themoviedb.org/3/genre/movie/list?language=en-US&api_key="+apiKey)
+            NetworkService.fetchCategories {data in
+                guard let filterList = data else {
+                    return
+                }
+                
+                self.createFilters(filterList: filterList)
+            }
         }
         
         addSubview(movieCollection)
     }
     
-    
-    struct FilterInfo {
-        let name : String
-        let id : Int
-    }
     
     
     func createFilters(filterList: [FilterInfo]) {
@@ -167,39 +168,9 @@ extension String {
 
 
 extension CategoryGroupView: CollectionViewActions {
-    func movieClicked(movie: CategoryMovieModel) {
+    func movieClicked(movie: TMDBCategoryMovieModel) {
         movieDelegate?.userClickedMovie(movie: movie)
     }
 }
 
 
-extension CategoryGroupView : NetworkServiceProtocol {
-    func getDataFromURL(requestUrl: String) {
-        guard let url = URL(string: requestUrl) else { return  }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let networkService = NetworkService()
-        networkService.executeUrlRequest(request) { dataValue, error in
-            if error != nil {
-                return
-            }
-            guard let value = dataValue else {
-                return
-            }
-            
-            
-            guard let value = try? JSONDecoder().decode(TMDBGenresModel.self, from: value) else {
-                return
-            }
-            
-            var filterList : [FilterInfo] = []
-            for row in value.genres {
-                filterList.append(FilterInfo(name: row.name, id: row.id))
-            }
-            
-            self.createFilters(filterList: filterList)
-            
-        }
-    }
-}

@@ -54,7 +54,9 @@ class MovieCell: UICollectionViewCell {
         }
     }
     
-    func setup(movie : CategoryMovieModel) {
+    func setup(movie : TMDBCategoryMovieModel) {
+        self.movieImage.image = UIImage(named: "whitebackground.jpeg")
+        
         var poster = ""
         if movie.posterPath == nil {
             if movie.backdropPath != nil {

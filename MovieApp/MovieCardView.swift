@@ -98,7 +98,9 @@ class MovieCardView : UICollectionViewCell {
     }
     
     
-    func setup(movie: CategoryMovieModel) {
+    func setup(movie: TMDBCategoryMovieModel) {
+        self.imageView.image = UIImage(named: "whitebackground.jpeg")
+        
         var poster = ""
         if movie.posterPath == nil {
             if movie.backdropPath != nil {

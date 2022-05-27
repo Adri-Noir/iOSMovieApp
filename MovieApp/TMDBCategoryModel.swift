@@ -1,5 +1,5 @@
 //
-//  CategoryModel.swift
+//  TMDBCategoryModel.swift
 //  MovieApp
 //
 //  Created by Five on 07.05.2022..
@@ -8,9 +8,9 @@
 import Foundation
 
 
-struct CategoryModel : Codable {
+struct TMDBCategoryModel : Codable {
     let page : Int
-    let results : [CategoryMovieModel]
+    let results : [TMDBCategoryMovieModel]
     let totalPages : Int
     let totalResults : Int
     
@@ -24,7 +24,7 @@ struct CategoryModel : Codable {
 }
 
 
-struct CategoryMovieModel : Codable {
+struct TMDBCategoryMovieModel : Codable {
     let adult : Bool
     let backdropPath : String?
     let genreIds : [Int]

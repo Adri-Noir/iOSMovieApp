@@ -34,7 +34,6 @@ class SearchBarView: UIView {
     required init(coder aDecoder: NSCoder) {
         fatalError("This class does not support NSCoding")
     }
-
     
     private func buildView() {
         buildEmptyTextBox()
@@ -62,6 +61,8 @@ class SearchBarView: UIView {
         
         searchBox.delegate = self
         searchBox.placeholder = "Search"
+        searchBox.autocapitalizationType = .none
+        searchBox.autocorrectionType = .no
         searchWithoutCancelView.addSubview(searchBox)
         searchBox.snp.makeConstraints { (make) in
             make.centerY.trailing.height.equalToSuperview()
@@ -137,8 +138,8 @@ class SearchBarView: UIView {
     
     
     @objc private func cancelAction() {
-        delegate?.showResults(query: "")
-        delegate?.showMainPage()
+        delegate?.userClearedText()
+        delegate?.userPressedCancel()
         
         UIView.animate(withDuration: 0.2, delay: 0, options: .curveLinear) {
             self.cancelButton.alpha = 0;
@@ -164,16 +165,17 @@ class SearchBarView: UIView {
     @objc private func clearAction() {
         searchBox.text = ""
         removeClearButton()
-        delegate?.showResults(query: "")
+        delegate?.userClearedText()
     }
 
     
 }
 
+
 extension SearchBarView : UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         buildEditingTextBox()
-        delegate?.showResults(query: "")
+        delegate?.userClearedText()
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
@@ -185,14 +187,12 @@ extension SearchBarView : UITextFieldDelegate {
             }
         }
         
-        if string.elementsEqual("") {
-            let text = textField.text ?? ""
-            let index = text.index(text.endIndex, offsetBy: -1)
-            delegate?.showResults(query: String(text.prefix(upTo: index)))
-        } else {
-            let text = textField.text ?? ""
-            delegate?.showResults(query: text + string)
-        }
+        
+        return true
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        delegate?.userTyped(textBoxText: textField.text ?? "")
         
         return true
     }

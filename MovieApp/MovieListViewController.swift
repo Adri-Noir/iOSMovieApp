@@ -9,12 +9,20 @@ import Foundation
 import SnapKit
 import UIKit
 import MovieAppData
+import Network
 
 
 protocol SearchBoxActions: AnyObject {
-    func showResults(query: String)
-    func showMainPage()
+    func userTyped(textBoxText: String)
+    func userClearedText()
+    func userPressedCancel()
 }
+
+
+protocol MovieCollectionViewActions: AnyObject {
+    func userClickedMovie(movie: TMDBCategoryMovieModel)
+}
+
 
 class MovieListViewController: UIViewController {
     let searchView = UIView()
@@ -22,18 +30,44 @@ class MovieListViewController: UIViewController {
     var stackView = UIStackView()
     let mainPageScrollView = UIScrollView()
     let mainPageStackView = UIStackView()
+    lazy var searchResultsCollectionView : SearchResultsCollectionView = {
+        let searchResultsCollectionView = SearchResultsCollectionView()
+        searchResultsCollectionView.movieDelegate = self
+        
+        return searchResultsCollectionView
+    }()
+    
     var resultsViewSetup = false
-    let movieCollectionPopular = CategoryGroupView(group: .popular)
-    let movieCollectionFreeToWatch = CategoryGroupView(group: .freeToWatch)
-    let movieCollectionTending = CategoryGroupView(group: .trending)
+    
+    lazy var movieCollectionPopular : CategoryGroupView = {
+        let movieCollectionPopular = CategoryGroupView(group: .popular)
+        movieCollectionPopular.movieDelegate = self
+        return movieCollectionPopular
+    }()
+    
+    lazy var movieCollectionTopRated : CategoryGroupView = {
+        let movieCollectionTopRated = CategoryGroupView(group: .topRated)
+        movieCollectionTopRated.movieDelegate = self
+        return movieCollectionTopRated
+    }()
+    
+    lazy var movieCollectionTending : CategoryGroupView = {
+        let movieCollectionTending = CategoryGroupView(group: .trending)
+        movieCollectionTending.movieDelegate = self
+        return movieCollectionTending
+    }()
+    
     let padding = 20
     lazy var searchBar: SearchBarView = {
         let searchBarView = SearchBarView()
         searchBarView.delegate = self
         return searchBarView
     }()
+    var searchBackup : [TMDBCategoryMovieModel] = []
+    
     
     override func viewDidLoad() {
+        
         view.addSubview(searchView)
         searchView.addSubview(searchBar)
         view.backgroundColor = .white
@@ -50,42 +84,57 @@ class MovieListViewController: UIViewController {
             make.top.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview().inset(10)
         }
-        addResultsViews()
-        setResultsLayout()
-        removeResultsView()
+        
+        
+        setupResultsView()
         loadMainPage()
         setMainLayout()
+        
+        
+        let navBar = UINavigationBarAppearance()
+        navBar.configureWithDefaultBackground()
+        navBar.backgroundColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 1.00)
+        navigationItem.scrollEdgeAppearance = navBar
+        navigationItem.standardAppearance = navBar
+        navigationItem.compactAppearance = navBar
+        
+        self.navigationController?.navigationBar.tintColor = .white
+        let titleView = UIView()
+        let imageView = UIImageView(image: UIImage(named: "1a40d6f4d2d74d6370baae3e2adcfe1d"))
+        imageView.contentMode = .scaleAspectFit
+        titleView.addSubview(imageView)
+        imageView.snp.makeConstraints { (make) in
+            make.centerX.centerY.equalToSuperview()
+            make.height.equalTo(40)
+        }
+        
+        navigationItem.titleView = titleView
     }
     
+    
+    func setupResultsView() {
+        addResultsViews()
+        setResultsLayout()
+        hideResultsView()
+    }
+    
+    
     func loadSearchResults(query: String) {
-        for movie in Movies.all() {
-            if movie.title.lowercased().contains(query.lowercased()) {
-                let cardView = MovieCardView(movie: movie)
-                stackView.addArrangedSubview(cardView)
-            }
-        }
+        searchResultsCollectionView.search(query: query)
     }
     
     func setResultsLayout() {
-        scrollView.snp.makeConstraints{ (make) in
+        searchResultsCollectionView.snp.makeConstraints{ (make) in
             make.top.equalTo(searchView.snp.bottom).offset(padding)
             make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
             make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
             make.bottom.equalToSuperview()
         }
-        
-        stackView.axis = .vertical
-        
-        stackView.snp.makeConstraints{ (make) in
-            make.top.bottom.leading.equalToSuperview()
-            make.width.equalToSuperview()
-        }
+
     }
     
     func addResultsViews() {
-        view.addSubview(scrollView)
-        scrollView.addSubview(stackView)
-        stackView.axis = .vertical
+        view.addSubview(searchResultsCollectionView)
     }
     
     
@@ -98,7 +147,7 @@ class MovieListViewController: UIViewController {
         mainPageStackView.distribution = .equalSpacing
         mainPageStackView.spacing = 20
         mainPageStackView.addArrangedSubview(movieCollectionPopular)
-        mainPageStackView.addArrangedSubview(movieCollectionFreeToWatch)
+        mainPageStackView.addArrangedSubview(movieCollectionTopRated)
         mainPageStackView.addArrangedSubview(movieCollectionTending)
         
     }
@@ -117,7 +166,7 @@ class MovieListViewController: UIViewController {
         }
         
         mainPageStackView.arrangedSubviews.forEach({ $0.snp.makeConstraints{ (make) in
-            make.leading.trailing.equalToSuperview()
+            make.leading.equalToSuperview()
             make.width.equalToSuperview()
         } })
         
@@ -129,40 +178,72 @@ class MovieListViewController: UIViewController {
     }
     
     
-    func removeMainView() {
+    func hideMainView() {
         mainPageScrollView.isHidden = true
         
     }
     
-    func removeResultsView() {
-        scrollView.isHidden = true
+    func hideResultsView() {
+        searchResultsCollectionView.isHidden = true
 
     }
     
     func showResultView() {
-        scrollView.isHidden = false
-        stackView.isHidden = false
-    }
-}
-
-
-extension MovieListViewController: SearchBoxActions {
-    func showMainPage() {
-        removeResultsView()
-        showMainView()
-        resultsViewSetup = false
+        searchResultsCollectionView.isHidden = false
 
     }
     
     func showResults(query: String) {
         if !resultsViewSetup {
             resultsViewSetup = true
-            removeMainView()
+            hideMainView()
             showResultView()
         } else {
             stackView.subviews.forEach({ $0.removeFromSuperview() })
         }
         
         loadSearchResults(query: query)
+    }
+    
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: { (_) in
+            self.searchResultsCollectionView.screenRotated()
+        }, completion: nil)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(true)
+        self.searchResultsCollectionView.screenRotated() // There is a weird issues I wasn't able to fix: when I click back on the navbar after I clicked on a movie everything in search results collection view resets
+
+    }
+    
+}
+
+
+extension MovieListViewController: SearchBoxActions {
+    func userPressedCancel() {
+        hideResultsView()
+        showMainView()
+        resultsViewSetup = false
+
+    }
+    
+    func userTyped(textBoxText: String) {
+        showResults(query: textBoxText.lowercased())
+        
+    }
+    
+    func userClearedText() {
+        showResults(query: "")
+    }
+}
+
+
+extension MovieListViewController: MovieCollectionViewActions {
+    func userClickedMovie(movie: TMDBCategoryMovieModel) {
+        searchBackup = searchResultsCollectionView.searchResults
+        let appViewController = MovieDetailsViewController(movie: movie)
+        self.navigationController?.pushViewController(appViewController, animated: true)
     }
 }

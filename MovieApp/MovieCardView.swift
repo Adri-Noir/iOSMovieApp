@@ -9,29 +9,27 @@ import Foundation
 import UIKit
 import MovieAppData
 
-class MovieCardView : UIView {
+class MovieCardView : UICollectionViewCell {
     let shadowView = UIView()
     let cardView = UIView()
     let imageView = UIImageView()
     let textArea = UITextView()
     let title = UITextView()
+    let stackView = UIStackView()
     
     
     override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-
-    convenience init(movie : MovieModel) {
-        self.init(frame: CGRect.zero)
-        buildView(movie: movie)
+        super.init(frame: .zero)
+        buildView()
         setLayout()
     }
+
 
     required init(coder aDecoder: NSCoder) {
         fatalError("This class does not support NSCoding")
     }
     
-    func buildView(movie: MovieModel) {
+    func buildView() {
         backgroundColor = .white
         clipsToBounds = true
         layer.cornerRadius = 10
@@ -47,26 +45,31 @@ class MovieCardView : UIView {
         cardView.layer.cornerRadius = 10
         cardView.layer.masksToBounds = true
         
-        let url = URL(string: movie.imageUrl)
-        let data = try? Data(contentsOf: url!)
-        imageView.image = UIImage(data: data!)
         
-        title.text = movie.title + " (" + String(movie.year) + ")"
         title.font = UIFont.boldSystemFont(ofSize: 20)
         title.isScrollEnabled = false
+        title.isSelectable = false
         
-        textArea.text = movie.description
         textArea.font = UIFont.systemFont(ofSize: 16)
         textArea.isEditable = false
         textArea.isScrollEnabled = false
         textArea.textAlignment = .left
+        textArea.isSelectable = false
+        
+        stackView.axis = .vertical
+        stackView.alignment = .fill
+        stackView.distribution = .fill
+        
+        let emptySpaceView = UIView()
         
         
         addSubview(shadowView)
         shadowView.addSubview(cardView)
         cardView.addSubview(imageView)
-        cardView.addSubview(title)
-        cardView.addSubview(textArea)
+        cardView.addSubview(stackView)
+        stackView.addArrangedSubview(title)
+        stackView.addArrangedSubview(textArea)
+        stackView.addArrangedSubview(emptySpaceView)
         
     }
     
@@ -84,20 +87,51 @@ class MovieCardView : UIView {
         imageView.snp.makeConstraints{ (make) in
             make.top.leading.bottom.equalToSuperview()
             make.width.equalTo(140)
-            make.height.equalTo(209)
         }
         
-        title.snp.makeConstraints{ (make) in
+        stackView.snp.makeConstraints{ (make) in
             make.top.equalToSuperview().offset(10)
-            make.leading.equalTo(imageView.snp.trailing).offset(10)
-            make.trailing.equalToSuperview().inset(10)
-        }
-        
-        textArea.snp.makeConstraints{ (make) in
-            make.top.equalTo(title.snp.bottom)
             make.leading.equalTo(imageView.snp.trailing).offset(10)
             make.trailing.equalToSuperview().inset(10)
             make.bottom.equalToSuperview().inset(10)
         }
+    }
+    
+    
+    func setup(movie: TMDBCategoryMovieModel) {
+        self.imageView.image = UIImage(named: "whitebackground.jpeg")
+        
+        var poster = ""
+        if movie.posterPath == nil {
+            if movie.backdropPath != nil {
+                poster = movie.backdropPath!
+            }
+        } else {
+            poster = movie.posterPath!
+        }
+        
+        let url = URL(string: "https://image.tmdb.org/t/p/w500"+poster)
+
+        DispatchQueue.global().async {
+            if let data = try? Data(contentsOf: url!) {
+                DispatchQueue.main.async {
+                    self.imageView.image = UIImage(data: data)
+                }
+            }
+        }
+        
+        
+        if (movie.releaseDate != "") {
+            title.text = movie.title + " (" + String(movie.releaseDate.split(separator: "-")[0]) + ")"
+        } else {
+            title.text = "Error: no title"
+        }
+        
+        if (movie.overview != "") {
+            textArea.text = movie.overview
+        } else {
+            textArea.text = "Error: no overview"
+        }
+        
     }
 }

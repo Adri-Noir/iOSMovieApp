@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Movie" representedClassName="Movie" syncable="YES" codeGenerationType="class"/>
+    <entity name="MovieGenre" representedClassName="MovieGenre" syncable="YES" codeGenerationType="class"/>
+    <entity name="MovieGroup" representedClassName="MovieGroup" syncable="YES" codeGenerationType="class"/>
+    <elements>
+        <element name="Movie" positionX="-63" positionY="-18" width="128" height="29"/>
+        <element name="MovieGroup" positionX="-54" positionY="-9" width="128" height="29"/>
+        <element name="MovieGenre" positionX="-36" positionY="9" width="128" height="29"/>
+    </elements>
+</model>

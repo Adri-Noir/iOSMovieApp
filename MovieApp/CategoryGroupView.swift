@@ -11,7 +11,8 @@ import MovieAppData
 
 
 protocol CollectionViewActions: AnyObject {
-    func movieClicked(movie: TMDBCategoryMovieModel)
+    func movieClicked(movie: MovieData)
+    func movieLiked(movie: MovieData)
 }
 
 
@@ -20,8 +21,8 @@ class CategoryGroupView : UIView {
     let title = UITextField()
     let scrollView = UIScrollView()
     let stackView = UIStackView()
-    var movieCollection = MovieCollectionView(group: .popular)
-    let selectedButton = 0
+    var movieCollection = MovieCollectionView()
+    var selectedButtonId = -1
     let buttonBorder : UIView = {
         let border = UIView()
         border.backgroundColor = .black
@@ -46,7 +47,6 @@ class CategoryGroupView : UIView {
     }
     
     func buildView(group: MovieGroup) {
-        movieCollection = MovieCollectionView(group: group)
         movieCollection.movieDelegate = self
         
         addSubview(title)
@@ -62,32 +62,19 @@ class CategoryGroupView : UIView {
         stackView.distribution = .equalSpacing
         stackView.spacing = 20
         
-        
-        switch(group) {
-        case .trending:
-            createFilters(filterList: [FilterInfo(name: "Day", id: -1), FilterInfo(name: "Week", id: -2)])
-        default:
-            NetworkService.fetchCategories {data in
-                guard let filterList = data else {
-                    return
-                }
-                
-                self.createFilters(filterList: filterList)
-            }
-        }
-        
         addSubview(movieCollection)
     }
     
     
-    
-    func createFilters(filterList: [FilterInfo]) {
+    func refreshFilters(filterList: [GenreModel]) {
+        stackView.subviews.forEach({ $0.removeFromSuperview() })
+        
         var counter = 0
-        for row in filterList {
+        for filter in filterList {
             let button = UIButton()
-            button.setTitle(row.name, for: .normal)
+            button.setTitle(filter.name, for: .normal)
             button.setTitleColor(.black, for: .normal)
-            button.tag = Int(row.id)
+            button.tag = Int(filter.id)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 18)
             
             button.addTarget(self, action: #selector(toggleButtonAction(sender:)), for: .touchUpInside)
@@ -101,12 +88,23 @@ class CategoryGroupView : UIView {
                     make.top.equalTo(button.snp.bottom).offset(3)
                     make.height.equalTo(3)
                 }
-                movieCollection.filterMovies(filter: row.id)
+                selectedButtonId = filter.id
                 
             }
             counter += 1
             stackView.addArrangedSubview(button)
         }
+    }
+    
+    
+    func fillCollectionViewWithData(movieData: [MovieData]) {
+        movieCollection.movies = movieData
+        movieCollection.filterMovies(filter: selectedButtonId)
+    }
+    
+    
+    func reloadData() {
+        movieCollection.reloadData()
     }
     
     
@@ -148,6 +146,7 @@ class CategoryGroupView : UIView {
         }
         sender.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
         currentBoldButton = sender
+        selectedButtonId = sender.tag
         movieCollection.filterMovies(filter: sender.tag)
     }
     
@@ -168,8 +167,12 @@ extension String {
 
 
 extension CategoryGroupView: CollectionViewActions {
-    func movieClicked(movie: TMDBCategoryMovieModel) {
+    func movieClicked(movie: MovieData) {
         movieDelegate?.userClickedMovie(movie: movie)
+    }
+    
+    func movieLiked(movie: MovieData) {
+        movieDelegate?.userClickedLike(movie: movie)
     }
 }
 

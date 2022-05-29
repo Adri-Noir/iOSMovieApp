@@ -14,14 +14,19 @@ class MovieCell: UICollectionViewCell {
     let movieImage = UIImageView()
     let likeButton : UIButton = {
         let button = UIButton()
-        let config = UIImage.SymbolConfiguration(pointSize: 21, weight: .medium, scale: .default)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium, scale: .default)
         button.setImage(UIImage(systemName: "heart", withConfiguration: config)!.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        button.setImage(UIImage(systemName: "heart", withConfiguration: config)!.withTintColor(UIColor(red: 1.00, green: 0.12, blue: 0.21, alpha: 1.00), renderingMode: .alwaysOriginal), for: .selected)
+        button.setImage(UIImage(systemName: "heart.fill", withConfiguration: config)!.withTintColor(.white, renderingMode: .alwaysOriginal), for: .selected)
         button.backgroundColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 0.6)
         button.clipsToBounds = true
         button.layer.cornerRadius = 20
+        button.addTarget(self, action: #selector(userPressedLike), for: .touchUpInside)
         return button
     }()
+    
+    var movieData : MovieData?
+    
+    weak var movieDelegate: MovieCellDelegate?
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -48,22 +53,32 @@ class MovieCell: UICollectionViewCell {
         }
         
         likeButton.snp.makeConstraints { (make) in
-            make.leading.top.equalToSuperview().offset(10)
+            make.leading.top.equalToSuperview().offset(5)
             make.width.height.equalTo(40)
         
         }
     }
     
-    func setup(movie : TMDBCategoryMovieModel) {
+    
+    @objc func userPressedLike(sender: UIButton!) {
+        if movieData != nil && movieData?.favorite != nil {
+            likeButton.isSelected = !(movieData!.favorite)
+            movieDelegate?.userClickedLike(movie: movieData!)
+        }
+    }
+    
+    
+    func setup(movie : MovieData) {
+        movieData = movie
         self.movieImage.image = UIImage(named: "whitebackground.jpeg")
         
         var poster = ""
-        if movie.posterPath == nil {
-            if movie.backdropPath != nil {
-                poster = movie.backdropPath!
+        if movie.poster_path == nil {
+            if movie.backdrop_path != nil {
+                poster = movie.backdrop_path!
             }
         } else {
-            poster = movie.posterPath!
+            poster = movie.poster_path!
         }
 
         let url = URL(string: "https://image.tmdb.org/t/p/w500"+poster)
@@ -76,7 +91,7 @@ class MovieCell: UICollectionViewCell {
             }
         }
         
-        likeButton.isSelected = false
+        likeButton.isSelected = movie.favorite
     }
 }
 

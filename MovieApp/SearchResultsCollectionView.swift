@@ -20,9 +20,8 @@ class SearchResultsCollectionView: UIView {
         return UICollectionView(frame: CGRect.zero, collectionViewLayout: flowlayout)
     }()
     weak var movieDelegate: MovieCollectionViewActions?
-    var moviesList : [TMDBCategoryMovieModel] = []
-    let apiKey = Constants.apiKey
-    var searchResults : [TMDBCategoryMovieModel] = []
+
+    var searchResults : [MovieData] = []
     
     
     override init(frame: CGRect) {
@@ -63,21 +62,10 @@ class SearchResultsCollectionView: UIView {
         collectionView.reloadData()
     }
     
-    func search(query: String) {
-        searchResults = []
-        NetworkService.fetchSearchResults(searchQuery: query) {data in
-            guard let searchData = data else {
-                self.collectionView.reloadData()
-                return
-            }
-            
-            for movie in searchData.results {
-                self.searchResults.append(movie)
-            }
-            
-            self.collectionView.reloadData()
-        }
+    func search(movies: [MovieData]) {
+        searchResults = movies
         
+        collectionView.reloadData()
     }
 }
 

@@ -9,6 +9,8 @@ import Foundation
 import UIKit
 
 class TabBarController: UITabBarController {
+    let movieListsViewController = MovieListViewController()
+    let favoritesViewController = FavoritesViewController()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,8 +22,7 @@ class TabBarController: UITabBarController {
         tabBar.tintColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 1.00)
     
 
-        let movieList = MovieListViewController()
-        let navigationController = UINavigationController(rootViewController: movieList)
+        let navigationController = UINavigationController(rootViewController: movieListsViewController)
         
         let tabOne = UITabBarItem(
             title: "Home", image: UIImage(systemName: "house")!
@@ -33,8 +34,8 @@ class TabBarController: UITabBarController {
         
         navigationController.tabBarItem = tabOne
         
-        let favoritesView = FavoritesViewController()
-        let favoritesNavigationController = UINavigationController(rootViewController: favoritesView)
+        
+        let favoritesNavigationController = UINavigationController(rootViewController: favoritesViewController)
         let tabTwo = UITabBarItem(
             title: "Favorites", image: UIImage(systemName: "heart")!
                 .withTintColor(UIColor(red: 0.74, green: 0.74, blue: 0.74, alpha: 1.00), renderingMode: .alwaysOriginal),
@@ -42,7 +43,7 @@ class TabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "heart.fill")!
                 .withTintColor(UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 1.00), renderingMode: .alwaysOriginal))
         
-        favoritesView.tabBarItem = tabTwo
+        favoritesViewController.tabBarItem = tabTwo
         
         self.viewControllers = [navigationController, favoritesNavigationController]
         

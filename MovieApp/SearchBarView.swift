@@ -181,20 +181,22 @@ extension SearchBarView : UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         if textField.text?.isEmpty ?? true {
             clearButtonLayout()
-        } else {
-            if textField.text?.count == 1 && string.elementsEqual("") {
-                removeClearButton()
-            }
+        }
+        if textField.text?.count == 1 && string.elementsEqual("") {
+            removeClearButton()
+            delegate?.userTyped(textBoxText: "")
+            return true
         }
         
+        if string.elementsEqual("") {
+            let text = textField.text ?? ""
+            let index = text.index(text.endIndex, offsetBy: -1)
+            delegate?.userTyped(textBoxText: String(text.prefix(upTo: index)))
+        } else {
+            let text = textField.text ?? ""
+            delegate?.userTyped(textBoxText: text + string)
+        }
         
         return true
     }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        delegate?.userTyped(textBoxText: textField.text ?? "")
-        
-        return true
-    }
-    
 }

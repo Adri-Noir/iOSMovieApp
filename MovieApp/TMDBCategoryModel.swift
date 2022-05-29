@@ -38,6 +38,7 @@ struct TMDBCategoryMovieModel : Codable {
     let title : String
     let voteAverage : Double
     let voteCount : Int
+    let video: Bool
     
     enum CodingKeys: String, CodingKey {
         case adult
@@ -53,5 +54,6 @@ struct TMDBCategoryMovieModel : Codable {
         case title
         case voteAverage = "vote_average"
         case voteCount = "vote_count"
+        case video
     }
 }

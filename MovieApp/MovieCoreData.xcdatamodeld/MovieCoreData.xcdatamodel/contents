@@ -1,11 +1,51 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="Movie" representedClassName="Movie" syncable="YES" codeGenerationType="class"/>
-    <entity name="MovieGenre" representedClassName="MovieGenre" syncable="YES" codeGenerationType="class"/>
-    <entity name="MovieGroup" representedClassName="MovieGroup" syncable="YES" codeGenerationType="class"/>
+    <entity name="MovieData" representedClassName="MovieData" syncable="YES">
+        <attribute name="adult" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="backdrop_path" optional="YES" attributeType="String"/>
+        <attribute name="favorite" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="original_language" attributeType="String"/>
+        <attribute name="original_title" attributeType="String"/>
+        <attribute name="overview" attributeType="String"/>
+        <attribute name="popularity" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="poster_path" optional="YES" attributeType="String"/>
+        <attribute name="release_date" attributeType="String"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="video" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="vote_average" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="vote_count" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="genre_ids" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MovieGenreData" inverseName="movies" inverseEntity="MovieGenreData"/>
+        <relationship name="movie_group" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MovieGroupData" inverseName="movies" inverseEntity="MovieGroupData"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MovieGenreData" representedClassName="MovieGenreData" syncable="YES">
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="movies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MovieData" inverseName="genre_ids" inverseEntity="MovieData"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MovieGroupData" representedClassName="MovieGroupData" syncable="YES">
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="movies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MovieData" inverseName="movie_group" inverseEntity="MovieData"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
     <elements>
-        <element name="Movie" positionX="-63" positionY="-18" width="128" height="29"/>
-        <element name="MovieGroup" positionX="-54" positionY="-9" width="128" height="29"/>
-        <element name="MovieGenre" positionX="-36" positionY="9" width="128" height="29"/>
+        <element name="MovieData" positionX="-432.896240234375" positionY="41.64810180664062" width="128" height="283"/>
+        <element name="MovieGenreData" positionX="-20.6353759765625" positionY="70.26556396484375" width="128" height="88"/>
+        <element name="MovieGroupData" positionX="-229.9998779296875" positionY="-65.45362854003906" width="128" height="88"/>
     </elements>
 </model>

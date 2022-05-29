@@ -98,19 +98,18 @@ class MovieCardView : UICollectionViewCell {
     }
     
     
-    func setup(movie: TMDBCategoryMovieModel) {
+    func setup(movie: MovieData) {
         self.imageView.image = UIImage(named: "whitebackground.jpeg")
         
-        var poster = ""
-        if movie.posterPath == nil {
-            if movie.backdropPath != nil {
-                poster = movie.backdropPath!
-            }
-        } else {
-            poster = movie.posterPath!
+        var url = URL(string: "https://image.tmdb.org/t/p/w500")
+        
+        if let backposter = movie.backdrop_path {
+            url = URL(string: "https://image.tmdb.org/t/p/w500"+backposter)
         }
         
-        let url = URL(string: "https://image.tmdb.org/t/p/w500"+poster)
+        if let poster = movie.poster_path {
+            url = URL(string: "https://image.tmdb.org/t/p/w500"+poster)
+        }
 
         DispatchQueue.global().async {
             if let data = try? Data(contentsOf: url!) {
@@ -121,8 +120,8 @@ class MovieCardView : UICollectionViewCell {
         }
         
         
-        if (movie.releaseDate != "") {
-            title.text = movie.title + " (" + String(movie.releaseDate.split(separator: "-")[0]) + ")"
+        if (movie.release_date != "") {
+            title.text = movie.title ?? ""
         } else {
             title.text = "Error: no title"
         }

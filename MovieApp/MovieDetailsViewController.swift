@@ -15,6 +15,7 @@ class MovieDetailsViewController: UIViewController {
     private let movieDurationLabel = UILabel()
     private let overviewText = UITextView()
     private let imageView = UIImageView()
+    private let movieLikeButton = UIButton(type: .custom)
     private let castView = CastView()
     
     private let fontSizeBig = CGFloat(28)
@@ -26,10 +27,12 @@ class MovieDetailsViewController: UIViewController {
     private let smallSpace = CGFloat(10)
     private let extraSmallSpace = CGFloat(5)
     private let padding = CGFloat(20)
-    private var movie : TMDBCategoryMovieModel?
+    private var movie : MovieData?
+    
+    private let moviesRepository = MoviesRepository()
     
     
-    init(movie : TMDBCategoryMovieModel) {
+    init(movie : MovieData) {
         self.movie = movie
         super.init(nibName: nil, bundle: nil)
     }
@@ -55,41 +58,75 @@ class MovieDetailsViewController: UIViewController {
     }
     
     
-    private func fetchMovieDetails() {
-        NetworkService.fetchMovieDetails(movieId: movie!.id) {data in
-            guard let movieData = data else {
-                self.buildErrorView()
+    private func fetchCastData() {
+        guard let movie = movie else {return}
+        
+        NetworkService.fetchMovieCast(movieId: Int(movie.id)) {data in
+            guard let castData = data else {
                 return
             }
             
-            let url = URL(string: "https://image.tmdb.org/t/p/original"+movieData.posterPath)
-            DispatchQueue.global().async {
-                if let data = try? Data(contentsOf: url!) {
-                    DispatchQueue.main.async {
-                        self.imageView.contentMode = .scaleAspectFit
-                        self.imageView.image = UIImage(data: data)!
-                        self.setImageConstraint()
-                    }
+            self.castView.fetchMovieCast(castData: castData.crew)
+        }
+    }
+    
+    
+    private func fetchMovieDetails() {
+        let movieData = movie!
+        
+        self.imageView.backgroundColor = .black
+        var url = URL(string: "https://image.tmdb.org/t/p/original")
+        
+        if let backposter = movieData.backdrop_path {
+            url = URL(string: "https://image.tmdb.org/t/p/original"+backposter)
+        }
+        
+        if let poster = movieData.poster_path {
+            url = URL(string: "https://image.tmdb.org/t/p/original"+poster)
+        }
+        
+        let blurEffect = UIBlurEffect(style: UIBlurEffect.Style.dark)
+        let blurEffectView = UIVisualEffectView(effect: blurEffect)
+        blurEffectView.frame = imageView.bounds
+        blurEffectView.layer.opacity = 0.5
+
+        blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        imageView.addSubview(blurEffectView)
+        
+        DispatchQueue.global().async {
+            if let data = try? Data(contentsOf: url!) {
+                DispatchQueue.main.async {
+                    self.imageView.contentMode = .scaleAspectFit
+                    self.imageView.image = UIImage(data: data)!
+                    self.setImageConstraint()
                 }
+            }
+        }
+        
+        self.ratingLabel.text = String(Int(movieData.vote_average*10))+"%"
+        self.movieTitleLabel.text = movieData.title
+        self.movieReleaseDateLabel.text = movieData.release_date
+        var movieTags = ""
+        var counter = 0
+        for genre in movieData.genre_ids?.allObjects as? [MovieGenreData] ?? [] {
+            if genre.id == -1 || genre.id == -2 {
+                continue
             }
             
-            self.ratingLabel.text = String(Int(movieData.voteAverage*10))+"%"
-            self.movieTitleLabel.text = movieData.title
-            self.movieReleaseDateLabel.text = movieData.releaseDate
-            var movieTags = ""
-            var counter = 0
-            for genre in movieData.genres {
-                if counter > 3 {
-                    break
-                }
-                movieTags += genre.name + "  "
-                counter += 1
+            if counter > 3 {
+                break
             }
-            self.movieTagLabel.text = movieTags
-            self.movieDurationLabel.text = String(movieData.runtime) + " m"
-            self.overviewText.text = movieData.overview
-            self.castView.fetchMovieCast(movieId: movieData.id)
+            movieTags += (genre.name ?? "") + "  "
+            counter += 1
         }
+        self.movieTagLabel.text = movieTags
+        self.overviewText.text = movieData.overview
+        
+        fetchCastData()
+        
+        self.movieLikeButton.isSelected = movieData.favorite
+        
+        
     }
     
     
@@ -112,6 +149,14 @@ class MovieDetailsViewController: UIViewController {
             make.centerY.centerX.equalToSuperview()
             make.width.equalTo(300)
             make.height.equalTo(200)
+        }
+    }
+    
+    
+    @objc func userPressedLike(sender: UIButton!) {
+        if movie != nil && movie?.favorite != nil {
+            movieLikeButton.isSelected = !(movie!.favorite)
+            moviesRepository.updateFavoritesField(movie: movie!)
         }
     }
     
@@ -283,17 +328,19 @@ class MovieDetailsViewController: UIViewController {
         stackView.addArrangedSubview(movieLikeButtonView)
         movieLikeButtonView.translatesAutoresizingMaskIntoConstraints = false
         movieLikeButtonView.heightAnchor.constraint(equalToConstant: buttonSize + smallSpace).isActive = true
-        let movieLikeButton = UIButton(type: .custom)
+        
         movieLikeButtonView.addSubview(movieLikeButton)
         movieLikeButton.backgroundColor = .darkGray
         movieLikeButton.layer.cornerRadius = 0.5 * buttonSize
         movieLikeButton.clipsToBounds = true
         movieLikeButton.layer.borderWidth = 0
-        movieLikeButton.setImage(UIImage(systemName: "star")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        movieLikeButton.setImage(UIImage(systemName: "heart")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        movieLikeButton.setImage(UIImage(systemName: "heart.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .selected)
         movieLikeButton.translatesAutoresizingMaskIntoConstraints = false
         movieLikeButton.centerYAnchor.constraint(equalTo: movieLikeButtonView.centerYAnchor).isActive = true
         movieLikeButton.heightAnchor.constraint(equalToConstant: buttonSize).isActive = true
         movieLikeButton.widthAnchor.constraint(equalToConstant: buttonSize).isActive = true
+        movieLikeButton.addTarget(self, action: #selector(userPressedLike), for: .touchUpInside)
         
         
         let emptyView2 = UIView()

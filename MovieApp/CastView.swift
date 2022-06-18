@@ -56,28 +56,23 @@ class CastView: UIView {
     }
     
     
-    func fetchMovieCast(movieId id: Int) {
-        NetworkService.fetchMovieCast(movieId: id) {data in
-            guard let castData = data else {
-                return
+    func fetchMovieCast(castData: [TMDBCrewModel]) {
+        for (index, crew) in castData.enumerated() {
+            if (index >= 6) {
+                break
             }
             
-            for (index, crew) in castData.crew.enumerated() {
-                if (index >= 6) {
-                    break
-                }
-                
-                let castCell = CastCell()
-                castCell.setup(crew: crew)
-                
-                if (index < 3) {
-                    self.row1StackView.addArrangedSubview(castCell)
-                } else {
-                    self.row2StackView.addArrangedSubview(castCell)
-                }
-                
+            let castCell = CastCell()
+            castCell.setup(crew: crew)
+            
+            if (index < 3) {
+                self.row1StackView.addArrangedSubview(castCell)
+            } else {
+                self.row2StackView.addArrangedSubview(castCell)
             }
+            
         }
+        
     }
 
 }

@@ -1,35 +1,29 @@
 //
-//  MovieCollectionViewController.swift
+//  FavoritesView.swift
 //  MovieApp
 //
-//  Created by Five on 10.04.2022..
+//  Created by Five on 29.05.2022..
 //
 
 import Foundation
-import SnapKit
 import UIKit
-import MovieAppData
-
-protocol MovieCellDelegate: AnyObject {
-    func userClickedLike(movie: MovieData)
-}
+import SnapKit
 
 
-class MovieCollectionView: UIView {
+class FavoritesView: UIView {
     let cellIdentifier = "cellId"
     let collectionView : UICollectionView = {
         let flowlayout = UICollectionViewFlowLayout()
-        flowlayout.scrollDirection = .horizontal
-        
+        flowlayout.scrollDirection = .vertical
+        flowlayout.sectionInset = UIEdgeInsets(top: 20, left: 0, bottom: 10, right: 0)
+        flowlayout.minimumInteritemSpacing = 7
+        flowlayout.minimumLineSpacing = 30
         return UICollectionView(frame: CGRect.zero, collectionViewLayout: flowlayout)
     }()
+    
+    var favoriteMovies : [MovieData] = []
     weak var movieDelegate: CollectionViewActions?
     
-    
-    var movies : [MovieData] = []
-    var filteredMovies : [MovieData] = []
-    var lastFilter : Int = 0
-
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,7 +40,6 @@ class MovieCollectionView: UIView {
         fatalError("This class does not support NSCoding")
     }
     
-    
     func buildView() {
         addSubview(collectionView)
         backgroundColor = .white
@@ -61,48 +54,27 @@ class MovieCollectionView: UIView {
     func setLayout() {
         
         collectionView.snp.makeConstraints { (make) in
-            make.top.leading.trailing.bottom.equalToSuperview()
+            make.top.leading.bottom.trailing.equalToSuperview()
         }
         collectionView.collectionViewLayout.invalidateLayout()
         
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
     }
+    
 
-    
-    func filterMovies(filter: Int) {
-        if lastFilter == filter {
-            return
-        }
-        
-        lastFilter = filter
-        filteredMovies = []
-        
-        for movie in movies {
-            for genre in movie.genre_ids?.allObjects as? [MovieGenreData] ?? [] {
-                if genre.id == Int64(filter) {
-                    filteredMovies.append(movie)
-                }
-            }
-        }
-        
-        collectionView.reloadData()
-        
-        
-    }
-    
-    
-    func reloadData() {
+    func fetchData(movies: [MovieData]) {
+        favoriteMovies = movies
         collectionView.reloadData()
     }
 }
 
-extension MovieCollectionView: UICollectionViewDataSource {
+
+extension FavoritesView: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 1
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return filteredMovies.count
+        return favoriteMovies.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -112,7 +84,7 @@ extension MovieCollectionView: UICollectionViewDataSource {
         
         cell.movieDelegate = self
         
-        let movie = filteredMovies[indexPath.row]
+        let movie = favoriteMovies[indexPath.row]
         cell.setup(movie: movie)
         
         return cell
@@ -120,21 +92,28 @@ extension MovieCollectionView: UICollectionViewDataSource {
 }
 
 
-extension MovieCollectionView: UICollectionViewDelegateFlowLayout {
+extension FavoritesView: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 156, height: 225)
+        return CGSize(width: 110, height: 155)
     }
 }
 
-
-extension MovieCollectionView: UICollectionViewDelegate {
+extension FavoritesView: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        movieDelegate?.movieClicked(movie: filteredMovies[indexPath.row])
+        movieDelegate?.movieClicked(movie: favoriteMovies[indexPath.row])
     }
 }
 
-extension MovieCollectionView: MovieCellDelegate {
+
+extension FavoritesView: MovieCellDelegate {
     func userClickedLike(movie: MovieData) {
+        for (index, favoriteMovie) in favoriteMovies.enumerated() {
+            if favoriteMovie == movie {
+                favoriteMovies.remove(at: index)
+                collectionView.deleteItems(at: [IndexPath(row: index, section: 0)])
+            }
+        }
+        
         movieDelegate?.movieLiked(movie: movie)
     }
 }

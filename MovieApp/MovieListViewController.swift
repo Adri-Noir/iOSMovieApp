@@ -20,14 +20,14 @@ protocol SearchBoxActions: AnyObject {
 
 
 protocol MovieCollectionViewActions: AnyObject {
-    func userClickedMovie(movie: TMDBCategoryMovieModel)
+    func userClickedMovie(movie: MovieData)
+    func userClickedLike(movie: MovieData)
 }
 
 
 class MovieListViewController: UIViewController {
     let searchView = UIView()
     let scrollView = UIScrollView()
-    var stackView = UIStackView()
     let mainPageScrollView = UIScrollView()
     let mainPageStackView = UIStackView()
     lazy var searchResultsCollectionView : SearchResultsCollectionView = {
@@ -63,8 +63,8 @@ class MovieListViewController: UIViewController {
         searchBarView.delegate = self
         return searchBarView
     }()
-    var searchBackup : [TMDBCategoryMovieModel] = []
     
+    let moviesRepository = MoviesRepository()
     
     override func viewDidLoad() {
         
@@ -89,8 +89,39 @@ class MovieListViewController: UIViewController {
         setupResultsView()
         loadMainPage()
         setMainLayout()
+        buildNavBar()
         
         
+        moviesRepository.generateGroupData()
+
+        self.moviesRepository.fetchGenreData() {genreData in
+            self.movieCollectionPopular.refreshFilters(filterList: genreData)
+            self.movieCollectionTopRated.refreshFilters(filterList: genreData)
+            self.movieCollectionTending.refreshFilters(filterList: [GenreModel(id: -1, name: "Day"), GenreModel(id: -2, name: "Week")])
+   
+        }
+        
+        self.moviesRepository.generateMovieData() {
+            self.moviesRepository.fetchGroupData(group: "popular") {data in
+                self.movieCollectionPopular.fillCollectionViewWithData(movieData: data)
+            }
+            
+            self.moviesRepository.fetchGroupData(group: "trending") {data in
+                self.movieCollectionTending.fillCollectionViewWithData(movieData: data)
+            }
+            
+            self.moviesRepository.fetchGroupData(group: "toprated") {data in
+                self.movieCollectionTopRated.fillCollectionViewWithData(movieData: data)
+            }
+        }
+
+        
+        
+        
+    }
+    
+    
+    func buildNavBar() {
         let navBar = UINavigationBarAppearance()
         navBar.configureWithDefaultBackground()
         navBar.backgroundColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 1.00)
@@ -111,7 +142,6 @@ class MovieListViewController: UIViewController {
         navigationItem.titleView = titleView
     }
     
-    
     func setupResultsView() {
         addResultsViews()
         setResultsLayout()
@@ -120,7 +150,7 @@ class MovieListViewController: UIViewController {
     
     
     func loadSearchResults(query: String) {
-        searchResultsCollectionView.search(query: query)
+        searchResultsCollectionView.search(movies: moviesRepository.fetchSearchResults(query: query))
     }
     
     func setResultsLayout() {
@@ -198,11 +228,16 @@ class MovieListViewController: UIViewController {
             resultsViewSetup = true
             hideMainView()
             showResultView()
-        } else {
-            stackView.subviews.forEach({ $0.removeFromSuperview() })
         }
         
         loadSearchResults(query: query)
+    }
+    
+    
+    func reloadGroupData() {
+        self.movieCollectionTending.reloadData()
+        self.movieCollectionPopular.reloadData()
+        self.movieCollectionTopRated.reloadData()
     }
     
     
@@ -214,6 +249,7 @@ class MovieListViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
+        reloadGroupData()
         self.searchResultsCollectionView.screenRotated() // There is a weird issues I wasn't able to fix: when I click back on the navbar after I clicked on a movie everything in search results collection view resets
 
     }
@@ -241,9 +277,12 @@ extension MovieListViewController: SearchBoxActions {
 
 
 extension MovieListViewController: MovieCollectionViewActions {
-    func userClickedMovie(movie: TMDBCategoryMovieModel) {
-        searchBackup = searchResultsCollectionView.searchResults
+    func userClickedMovie(movie: MovieData) {
         let appViewController = MovieDetailsViewController(movie: movie)
         self.navigationController?.pushViewController(appViewController, animated: true)
+    }
+    
+    func userClickedLike(movie: MovieData) {
+        moviesRepository.updateFavoritesField(movie: movie)
     }
 }

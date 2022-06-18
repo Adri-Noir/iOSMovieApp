@@ -14,12 +14,19 @@ class MovieCell: UICollectionViewCell {
     let movieImage = UIImageView()
     let likeButton : UIButton = {
         let button = UIButton()
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium, scale: .default)
-        button.setImage(UIImage(systemName: "heart", withConfiguration: config)!.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        button.setImage(UIImage(systemName: "heart.fill", withConfiguration: config)!.withTintColor(.white, renderingMode: .alwaysOriginal), for: .selected)
+        let configNormal = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium, scale: .default)
+        button.setImage(UIImage(systemName: "heart", withConfiguration: configNormal)!.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
         button.backgroundColor = UIColor(red: 0.04, green: 0.15, blue: 0.25, alpha: 0.6)
         button.clipsToBounds = true
         button.layer.cornerRadius = 20
+        button.addTarget(self, action: #selector(userPressedLike), for: .touchUpInside)
+        return button
+    }()
+    let likeButtonBold : UIButton = {
+        let button = UIButton()
+        let configSelected = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium, scale: .default)
+        button.setImage(UIImage(systemName: "heart.fill", withConfiguration: configSelected)!.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        button.backgroundColor = .clear
         button.addTarget(self, action: #selector(userPressedLike), for: .touchUpInside)
         return button
     }()
@@ -45,6 +52,7 @@ class MovieCell: UICollectionViewCell {
         
         addSubview(movieImage)
         addSubview(likeButton)
+        likeButton.addSubview(likeButtonBold)
     }
     
     func setupLayouts() {
@@ -55,15 +63,43 @@ class MovieCell: UICollectionViewCell {
         likeButton.snp.makeConstraints { (make) in
             make.leading.top.equalToSuperview().offset(5)
             make.width.height.equalTo(40)
+        }
         
+        likeButtonBold.snp.makeConstraints { make in
+            make.centerX.centerY.equalToSuperview()
+            make.width.height.equalTo(0)
         }
     }
     
     
     @objc func userPressedLike(sender: UIButton!) {
         if movieData != nil && movieData?.favorite != nil {
-            likeButton.isSelected = !(movieData!.favorite)
+            if !self.movieData!.favorite {
+                UIView.animate(withDuration: 0.7, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: .curveEaseIn) {
+                    self.layoutBoldLikeButton(40)
+                    
+                    self.likeButton.layoutIfNeeded()
+                    
+                } completion: { _ in }
+
+            } else {
+                UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn) {
+                    self.layoutBoldLikeButton(6)
+                    
+                    
+                    self.likeButton.layoutIfNeeded()
+                } completion: { _ in
+                    self.layoutBoldLikeButton(0)
+                }
+            }
+
             movieDelegate?.userClickedLike(movie: movieData!)
+        }
+    }
+    
+    func layoutBoldLikeButton(_ height: Int) {
+        likeButtonBold.snp.updateConstraints { make in
+            make.width.height.equalTo(height)
         }
     }
     
@@ -91,7 +127,13 @@ class MovieCell: UICollectionViewCell {
             }
         }
         
-        likeButton.isSelected = movie.favorite
+
+        
+        if movie.favorite {
+            layoutBoldLikeButton(40)
+        } else {
+            layoutBoldLikeButton(0)
+        }
     }
 }
 

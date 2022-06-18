@@ -15,7 +15,8 @@ class MovieDetailsViewController: UIViewController {
     private let movieDurationLabel = UILabel()
     private let overviewText = UITextView()
     private let imageView = UIImageView()
-    private let movieLikeButton = UIButton(type: .custom)
+    private let movieLikeButton = UIButton()
+    private let movieLikeBoldButton = UIButton()
     private let castView = CastView()
     
     private let fontSizeBig = CGFloat(28)
@@ -51,12 +52,13 @@ class MovieDetailsViewController: UIViewController {
             buildErrorView()
             return
         }
+        
+        buildViews()
 
         fetchMovieDetails()
         
-        buildViews()
+        
     }
-    
     
     private func fetchCastData() {
         guard let movie = movie else {return}
@@ -96,7 +98,6 @@ class MovieDetailsViewController: UIViewController {
         DispatchQueue.global().async {
             if let data = try? Data(contentsOf: url!) {
                 DispatchQueue.main.async {
-                    self.imageView.contentMode = .scaleAspectFit
                     self.imageView.image = UIImage(data: data)!
                     self.setImageConstraint()
                 }
@@ -105,7 +106,17 @@ class MovieDetailsViewController: UIViewController {
         
         self.ratingLabel.text = String(Int(movieData.vote_average*10))+"%"
         self.movieTitleLabel.text = movieData.title
+        
+        UIView.animate(withDuration: 1, delay: 0, options: .curveLinear) {
+            self.movieTitleLabel.transform = .identity
+        } completion: { _ in }
+        
         self.movieReleaseDateLabel.text = movieData.release_date
+        
+        UIView.animate(withDuration: 1, delay: 0.5, options: .curveLinear) {
+            self.movieReleaseDateLabel.transform = .identity
+        } completion: { _ in }
+        
         var movieTags = ""
         var counter = 0
         for genre in movieData.genre_ids?.allObjects as? [MovieGenreData] ?? [] {
@@ -120,13 +131,29 @@ class MovieDetailsViewController: UIViewController {
             counter += 1
         }
         self.movieTagLabel.text = movieTags
+        
+        UIView.animate(withDuration: 1, delay: 0.75, options: .curveEaseInOut) {
+            self.movieTagLabel.transform = .identity
+        } completion: { _ in }
+        
+        
         self.overviewText.text = movieData.overview
         
         fetchCastData()
         
-        self.movieLikeButton.isSelected = movieData.favorite
+        if movieData.favorite {
+            layoutBoldLikeButton(40)
+        } else {
+            layoutBoldLikeButton(0)
+        }
         
         
+    }
+    
+    private func layoutBoldLikeButton(_ height: Int) {
+        movieLikeBoldButton.snp.updateConstraints { make in
+            make.width.height.equalTo(height)
+        }
     }
     
     
@@ -155,7 +182,26 @@ class MovieDetailsViewController: UIViewController {
     
     @objc func userPressedLike(sender: UIButton!) {
         if movie != nil && movie?.favorite != nil {
-            movieLikeButton.isSelected = !(movie!.favorite)
+            if !self.movie!.favorite {
+                UIView.animate(withDuration: 0.7, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: .curveEaseIn) {
+                    self.layoutBoldLikeButton(40)
+                    
+                    self.movieLikeButton.layoutIfNeeded()
+                    
+                } completion: { _ in }
+
+            } else {
+                UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn) {
+                    self.layoutBoldLikeButton(6)
+                    
+                    
+                    self.movieLikeButton.layoutIfNeeded()
+                } completion: { _ in
+                    self.layoutBoldLikeButton(0)
+                }
+            }
+            
+            
             moviesRepository.updateFavoritesField(movie: movie!)
         }
     }
@@ -223,10 +269,13 @@ class MovieDetailsViewController: UIViewController {
 //        }
         
         textOverImageView.addSubview(imageView)
+        
         imageView.snp.makeConstraints{ (make) in
             make.top.leading.trailing.bottom.width.equalToSuperview()
-            make.height.equalTo(200)
+            make.height.equalTo(3000 * (self.view.safeAreaLayoutGuide.layoutFrame.size.width / 2000))  // Set initial imageview size
         }
+        imageView.contentMode = .scaleAspectFit
+
         
         
         let stackView = UIStackView()
@@ -274,14 +323,14 @@ class MovieDetailsViewController: UIViewController {
         
         
         
-        
         stackView.addArrangedSubview(movieTitleLabel)
         movieTitleLabel.font = UIFont.boldSystemFont(ofSize: fontSizeBig)
         movieTitleLabel.textColor = .white
         movieTitleLabel.isScrollEnabled = false
         movieTitleLabel.isEditable = false
         movieTitleLabel.backgroundColor = .clear
-        
+        movieTitleLabel.transform = movieTitleLabel.transform.translatedBy(x: self.view.frame.width, y: 0)
+
         
         
         let releaseDateView = UIView()
@@ -294,6 +343,7 @@ class MovieDetailsViewController: UIViewController {
         movieReleaseDateLabel.topAnchor.constraint(equalTo: releaseDateView.topAnchor, constant: smallSpace).isActive = true
         movieReleaseDateLabel.leadingAnchor.constraint(equalTo: releaseDateView.leadingAnchor).isActive = true
         movieReleaseDateLabel.bottomAnchor.constraint(equalTo: releaseDateView.bottomAnchor).isActive = true
+        movieReleaseDateLabel.transform = movieReleaseDateLabel.transform.translatedBy(x: self.view.frame.width, y: 0)
         
         
         
@@ -310,6 +360,7 @@ class MovieDetailsViewController: UIViewController {
         movieTagLabel.leadingAnchor.constraint(equalTo: movieTagAndDurationView.leadingAnchor).isActive = true
         movieTagLabel.bottomAnchor.constraint(equalTo: movieTagAndDurationView.bottomAnchor).isActive = true
         movieTagLabel.adjustsFontSizeToFitWidth = true
+        movieTagLabel.transform = movieTagLabel.transform.translatedBy(x: self.view.frame.width, y: 0)
         
         
         movieTagAndDurationView.addSubview(movieDurationLabel)
@@ -323,24 +374,35 @@ class MovieDetailsViewController: UIViewController {
         movieDurationLabel.adjustsFontSizeToFitWidth = true
         
         
+        let likeButtonView = UIView()
+        stackView.addArrangedSubview(likeButtonView)
+        likeButtonView.snp.makeConstraints { make in
+            make.height.equalTo(buttonSize)
+        }
         
-        let movieLikeButtonView = UIView()
-        stackView.addArrangedSubview(movieLikeButtonView)
-        movieLikeButtonView.translatesAutoresizingMaskIntoConstraints = false
-        movieLikeButtonView.heightAnchor.constraint(equalToConstant: buttonSize + smallSpace).isActive = true
-        
-        movieLikeButtonView.addSubview(movieLikeButton)
+        likeButtonView.addSubview(movieLikeButton)
         movieLikeButton.backgroundColor = .darkGray
         movieLikeButton.layer.cornerRadius = 0.5 * buttonSize
         movieLikeButton.clipsToBounds = true
-        movieLikeButton.layer.borderWidth = 0
-        movieLikeButton.setImage(UIImage(systemName: "heart")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        movieLikeButton.setImage(UIImage(systemName: "heart.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .selected)
-        movieLikeButton.translatesAutoresizingMaskIntoConstraints = false
-        movieLikeButton.centerYAnchor.constraint(equalTo: movieLikeButtonView.centerYAnchor).isActive = true
-        movieLikeButton.heightAnchor.constraint(equalToConstant: buttonSize).isActive = true
-        movieLikeButton.widthAnchor.constraint(equalToConstant: buttonSize).isActive = true
+        let configNormal = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium, scale: .default)
+        movieLikeButton.setImage(UIImage(systemName: "heart", withConfiguration: configNormal)?
+                                    .withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
         movieLikeButton.addTarget(self, action: #selector(userPressedLike), for: .touchUpInside)
+        movieLikeButton.snp.makeConstraints { make in
+            make.width.height.equalTo(buttonSize)
+        }
+        
+        movieLikeButton.addSubview(movieLikeBoldButton)
+        movieLikeBoldButton.backgroundColor = .clear
+        let configSelected = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium, scale: .default)
+        movieLikeBoldButton.setImage(UIImage(systemName: "heart.fill", withConfiguration: configSelected)?
+                                    .withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        movieLikeBoldButton.addTarget(self, action: #selector(userPressedLike), for: .touchUpInside)
+        movieLikeBoldButton.snp.makeConstraints { make in
+            make.centerX.centerY.equalToSuperview()
+            make.width.height.equalTo(0)
+        }
+        
         
         
         let emptyView2 = UIView()
